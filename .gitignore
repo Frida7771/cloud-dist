@@ -22,4 +22,6 @@ configs/config.example.yaml
 *.css
 *.js
 *.ts
+*.chunk
 
+test/
