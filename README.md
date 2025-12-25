@@ -1,4 +1,4 @@
-# CloudDisk
+# CloudDist
 
 > Lightweight cloud drive backend built with Gin + GORM.
 

@@ -3,6 +3,7 @@ package logic
 import (
 	"context"
 	"errors"
+	"log"
 
 	"cloud-disk/core/helper"
 	"cloud-disk/core/internal/svc"
@@ -42,11 +43,15 @@ func (l *UserRepositorySaveLogic) UserRepositorySave(req *types.UserRepositorySa
 	}
 
 	// 更新当前容量
+	log.Printf("[UserRepositorySave] 更新用户容量: 用户=%s, 文件大小=%d, 当前已使用=%d, 更新后=%d",
+		userIdentity, rp.Size, ub.NowVolume, ub.NowVolume+rp.Size)
 	if err = l.svcCtx.DB.WithContext(l.ctx).Model(&models.UserBasic{}).
 		Where("identity = ?", userIdentity).
 		UpdateColumn("now_volume", gorm.Expr("now_volume + ?", rp.Size)).Error; err != nil {
+		log.Printf("[UserRepositorySave] 更新容量失败: %v", err)
 		return
 	}
+	log.Printf("[UserRepositorySave] 容量更新成功")
 	// 新增关联记录
 	ur := &models.UserRepository{
 		Identity:           helper.UUID(),

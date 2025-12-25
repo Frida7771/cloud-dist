@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"math/rand"
 	"net/http"
 	"path"
@@ -69,12 +70,12 @@ func AnalyzeToken(token string) (*define.UserClaim, error) {
 func MailSendCode(emailAddr, code string) error {
 	apiKey := define.SendGridAPIKey
 	if apiKey == "" {
-		return errors.New("SendGrid API key is not configured")
+		return errors.New("SendGrid API key is not configured (请设置环境变量 SendGridAPIKey)")
 	}
 
-	from := sgmail.NewEmail("CloudDisk", "frida16571@gmail.com")
+	from := sgmail.NewEmail("CloudDist", "frida16571@gmail.com")
 	to := sgmail.NewEmail("", emailAddr)
-	subject := "CloudDisk 验证码"
+	subject := "CloudDist 验证码"
 	plain := "你的验证码为：" + code
 	html := fmt.Sprintf("你的验证码为：<h1>%s</h1>", code)
 	message := sgmail.NewSingleEmail(from, subject, to, plain, html)
@@ -82,10 +83,10 @@ func MailSendCode(emailAddr, code string) error {
 	client := sendgrid.NewSendClient(apiKey)
 	resp, err := client.Send(message)
 	if err != nil {
-		return err
+		return fmt.Errorf("SendGrid 发送失败: %v", err)
 	}
 	if resp.StatusCode >= 400 {
-		return fmt.Errorf("sendgrid error: status=%d body=%s", resp.StatusCode, resp.Body)
+		return fmt.Errorf("SendGrid API 错误: status=%d body=%s", resp.StatusCode, resp.Body)
 	}
 	return nil
 }
@@ -142,22 +143,40 @@ func getS3Client(ctx context.Context) (*s3.Client, error) {
 	return s3Client, s3ClientErr
 }
 
-// S3ObjectURL 返回对象的完整访问地址
+// S3ObjectURL 返回对象的预签名访问地址（有效期1小时）
 func S3ObjectURL(key string) string {
-	base := strings.TrimSuffix(define.S3Endpoint, "/")
-	if base != "" {
-		if !strings.HasPrefix(base, "http") {
-			base = "https://" + base
+	ctx := context.Background()
+	client, err := getS3Client(ctx)
+	if err != nil {
+		log.Printf("[S3ObjectURL] 无法创建 S3 客户端: %v", err)
+		// 如果无法创建客户端，返回普通 URL（用于调试）
+		region := define.S3Region
+		if region == "" {
+			region = "us-east-1"
 		}
-		return fmt.Sprintf("%s/%s/%s", base, define.S3Bucket, key)
+		return fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", define.S3Bucket, region, key)
 	}
 
-	region := define.S3Region
-	if region == "" {
-		region = "us-east-1"
+	presignClient := s3.NewPresignClient(client)
+	presignedURL, err := presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(define.S3Bucket),
+		Key:    aws.String(key),
+	}, func(opts *s3.PresignOptions) {
+		opts.Expires = time.Duration(1 * time.Hour) // 1小时有效期
+	})
+
+	if err != nil {
+		log.Printf("[S3ObjectURL] 生成预签名 URL 失败: %v, key=%s", err, key)
+		// 如果生成预签名 URL 失败，返回普通 URL（用于调试）
+		region := define.S3Region
+		if region == "" {
+			region = "us-east-1"
+		}
+		return fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", define.S3Bucket, region, key)
 	}
 
-	return fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", define.S3Bucket, region, key)
+	log.Printf("[S3ObjectURL] 成功生成预签名 URL: key=%s", key)
+	return presignedURL.URL
 }
 
 // S3Upload 上传文件到 AWS S3

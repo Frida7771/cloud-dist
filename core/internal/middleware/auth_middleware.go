@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 
 	"cloud-disk/core/helper"
 
@@ -20,7 +21,10 @@ func (m *AuthMiddleware) Handle(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
-	uc, err := helper.AnalyzeToken(auth)
+	// 移除 "Bearer " 前缀（如果存在）
+	token := strings.TrimPrefix(auth, "Bearer ")
+	token = strings.TrimSpace(token)
+	uc, err := helper.AnalyzeToken(token)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return

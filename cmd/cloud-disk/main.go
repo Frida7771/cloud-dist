@@ -59,6 +59,8 @@ func provideGinEngine(cfg cfg.Config, svcCtx *svc.ServiceContext) *gin.Engine {
 	}
 	engine := gin.New()
 	engine.Use(gin.Recovery())
+	// Expose test static assets under /test for quick manual verification.
+	engine.Static("/test", "./test")
 	router.Register(engine, cfg.Name, svcCtx)
 	return engine
 }

@@ -44,10 +44,12 @@ func (l *UserRegisterLogic) UserRegister(req *types.UserRegisterRequest) (resp *
 	}
 	// 数据入库
 	user := &models.UserBasic{
-		Identity: helper.UUID(),
-		Name:     req.Name,
-		Password: helper.Md5(req.Password),
-		Email:    req.Email,
+		Identity:    helper.UUID(),
+		Name:        req.Name,
+		Password:    helper.Md5(req.Password),
+		Email:       req.Email,
+		NowVolume:   0,          // 初始已使用容量为 0
+		TotalVolume: 5368709120, // 默认总容量 5GB (5 * 1024 * 1024 * 1024)
 	}
 	if err = l.svcCtx.DB.WithContext(l.ctx).Create(user).Error; err != nil {
 		return nil, err
