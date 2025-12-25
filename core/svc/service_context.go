@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cloud-disk/core/define"
 	"cloud-disk/core/internal/middleware"
 	"cloud-disk/core/models"
 	appcfg "cloud-disk/internal/config"
@@ -26,6 +27,15 @@ func NewServiceContext(c appcfg.Config) (*ServiceContext, error) {
 		return nil, fmt.Errorf("init mysql: %w", err)
 	}
 	rdb := models.InitRedis(c.Redis.Addr)
+
+	// Initialize S3 configuration from config file (environment variables take precedence)
+	define.InitS3Config(
+		c.S3.AccessKeyID,
+		c.S3.SecretAccessKey,
+		c.S3.Bucket,
+		c.S3.Region,
+		c.S3.Endpoint,
+	)
 
 	return &ServiceContext{
 		Config: c,

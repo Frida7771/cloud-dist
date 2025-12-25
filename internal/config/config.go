@@ -10,6 +10,7 @@ type Config struct {
 	Redis    RedisConfig  `mapstructure:"Redis"`
 	Log      LogConfig    `mapstructure:"Log"`
 	HTTP     HTTPSettings `mapstructure:"HTTP"`
+	S3       S3Config     `mapstructure:"S3"`
 }
 
 // MysqlConfig carries datasource info for the ORM layer.
@@ -36,4 +37,13 @@ type LogConfig struct {
 type HTTPSettings struct {
 	ReadTimeoutSeconds  int `mapstructure:"ReadTimeoutSeconds"`
 	WriteTimeoutSeconds int `mapstructure:"WriteTimeoutSeconds"`
+}
+
+// S3Config carries AWS S3 configuration.
+type S3Config struct {
+	AccessKeyID     string `mapstructure:"AccessKeyID"`
+	SecretAccessKey string `mapstructure:"SecretAccessKey"`
+	Bucket          string `mapstructure:"Bucket"`
+	Region          string `mapstructure:"Region"`
+	Endpoint        string `mapstructure:"Endpoint"` // Optional custom endpoint
 }

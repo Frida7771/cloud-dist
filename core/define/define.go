@@ -30,6 +30,27 @@ var S3Bucket = os.Getenv("S3Bucket")
 var S3Region = os.Getenv("AWSRegion")
 var S3Endpoint = os.Getenv("S3Endpoint") // Optional custom endpoint
 
+// InitS3Config initializes S3 configuration from config struct.
+// Environment variables take precedence over config file values.
+func InitS3Config(accessKeyID, secretAccessKey, bucket, region, endpoint string) {
+	// Only set if not already set by environment variable
+	if AWSAccessKeyID == "" && accessKeyID != "" {
+		AWSAccessKeyID = accessKeyID
+	}
+	if AWSSecretAccessKey == "" && secretAccessKey != "" {
+		AWSSecretAccessKey = secretAccessKey
+	}
+	if S3Bucket == "" && bucket != "" {
+		S3Bucket = bucket
+	}
+	if S3Region == "" && region != "" {
+		S3Region = region
+	}
+	if S3Endpoint == "" && endpoint != "" {
+		S3Endpoint = endpoint
+	}
+}
+
 // PageSize default pagination parameter
 var PageSize = 20
 

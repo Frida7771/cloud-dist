@@ -24,3 +24,5 @@ configs/config.example.yaml
 *.ts
 *.chunk
 .mp4
+.yaml
+.yml
