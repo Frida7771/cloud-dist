@@ -16,7 +16,7 @@ type UploadPart struct {
 }
 
 type FileUploadChunkCompleteReply struct {
-	Identity string `json:"identity"` // 存储池identity
+	Identity string `json:"identity"` // Repository pool identity
 }
 
 type FileUploadChunkRequest struct {

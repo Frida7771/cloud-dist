@@ -15,21 +15,22 @@ type UserClaim struct {
 
 var JwtKey = "cloud-disk-key"
 var SendGridAPIKey = os.Getenv("SendGridAPIKey")
+var SendGridFromEmail = os.Getenv("SendGridFromEmail")
 
-// CodeLength 验证码长度
+// CodeLength verification code length
 var CodeLength = 6
 
-// CodeExpire 验证码过期时间（s）
+// CodeExpire verification code expiration time (seconds)
 var CodeExpire = 300
 
-// AWS S3 配置
+// AWS S3 configuration
 var AWSAccessKeyID = os.Getenv("AWSAccessKeyID")
 var AWSSecretAccessKey = os.Getenv("AWSSecretAccessKey")
 var S3Bucket = os.Getenv("S3Bucket")
 var S3Region = os.Getenv("AWSRegion")
-var S3Endpoint = os.Getenv("S3Endpoint") // 可选自定义 Endpoint
+var S3Endpoint = os.Getenv("S3Endpoint") // Optional custom endpoint
 
-// PageSize 分页的默认参数
+// PageSize default pagination parameter
 var PageSize = 20
 
 var Datetime = "2006-01-02 15:04:05"

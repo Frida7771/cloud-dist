@@ -50,7 +50,7 @@ func GenerateToken(id int, identity, name string, second int) (string, error) {
 }
 
 // AnalyzeToken
-// Token 解析
+// Token parsing
 func AnalyzeToken(token string) (*define.UserClaim, error) {
 	uc := new(define.UserClaim)
 	claims, err := jwt.ParseWithClaims(token, uc, func(token *jwt.Token) (interface{}, error) {
@@ -66,28 +66,36 @@ func AnalyzeToken(token string) (*define.UserClaim, error) {
 }
 
 // MailSendCode
-// 邮箱验证码发送
+// Send email verification code
 func MailSendCode(emailAddr, code string) error {
 	apiKey := define.SendGridAPIKey
 	if apiKey == "" {
-		return errors.New("SendGrid API key is not configured (请设置环境变量 SendGridAPIKey)")
+		return errors.New("SendGrid API key is not configured (please set environment variable SendGridAPIKey)")
 	}
 
-	from := sgmail.NewEmail("CloudDist", "frida16571@gmail.com")
+	fromEmail := define.SendGridFromEmail
+	if fromEmail == "" {
+		fromEmail = "frida16571@gmail.com" // Fallback to default if not set
+	}
+
+	from := sgmail.NewEmail("CloudDist", fromEmail)
 	to := sgmail.NewEmail("", emailAddr)
-	subject := "CloudDist 验证码"
-	plain := "你的验证码为：" + code
-	html := fmt.Sprintf("你的验证码为：<h1>%s</h1>", code)
+	subject := "CloudDist Verification Code"
+	plain := "Your verification code is: " + code
+	html := fmt.Sprintf("Your verification code is: <h1>%s</h1>", code)
 	message := sgmail.NewSingleEmail(from, subject, to, plain, html)
 
 	client := sendgrid.NewSendClient(apiKey)
 	resp, err := client.Send(message)
 	if err != nil {
-		return fmt.Errorf("SendGrid 发送失败: %v", err)
+		log.Printf("[MailCodeSend] SendGrid send failed: %v", err)
+		return fmt.Errorf("SendGrid send failed: %v", err)
 	}
 	if resp.StatusCode >= 400 {
-		return fmt.Errorf("SendGrid API 错误: status=%d body=%s", resp.StatusCode, resp.Body)
+		log.Printf("[MailCodeSend] SendGrid API error: status=%d body=%s", resp.StatusCode, resp.Body)
+		return fmt.Errorf("SendGrid API error: status=%d body=%s", resp.StatusCode, resp.Body)
 	}
+	log.Printf("[MailCodeSend] Verification code sent successfully to: %s", emailAddr)
 	return nil
 }
 
@@ -143,13 +151,13 @@ func getS3Client(ctx context.Context) (*s3.Client, error) {
 	return s3Client, s3ClientErr
 }
 
-// S3ObjectURL 返回对象的预签名访问地址（有效期1小时）
+// S3ObjectURL returns a presigned URL for the object (valid for 1 hour)
 func S3ObjectURL(key string) string {
 	ctx := context.Background()
 	client, err := getS3Client(ctx)
 	if err != nil {
-		log.Printf("[S3ObjectURL] 无法创建 S3 客户端: %v", err)
-		// 如果无法创建客户端，返回普通 URL（用于调试）
+		log.Printf("[S3ObjectURL] Failed to create S3 client: %v", err)
+		// If unable to create client, return regular URL (for debugging)
 		region := define.S3Region
 		if region == "" {
 			region = "us-east-1"
@@ -162,12 +170,12 @@ func S3ObjectURL(key string) string {
 		Bucket: aws.String(define.S3Bucket),
 		Key:    aws.String(key),
 	}, func(opts *s3.PresignOptions) {
-		opts.Expires = time.Duration(1 * time.Hour) // 1小时有效期
+		opts.Expires = time.Duration(1 * time.Hour) // 1 hour validity
 	})
 
 	if err != nil {
-		log.Printf("[S3ObjectURL] 生成预签名 URL 失败: %v, key=%s", err, key)
-		// 如果生成预签名 URL 失败，返回普通 URL（用于调试）
+		log.Printf("[S3ObjectURL] Failed to generate presigned URL: %v, key=%s", err, key)
+		// If presigned URL generation fails, return regular URL (for debugging)
 		region := define.S3Region
 		if region == "" {
 			region = "us-east-1"
@@ -175,11 +183,11 @@ func S3ObjectURL(key string) string {
 		return fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", define.S3Bucket, region, key)
 	}
 
-	log.Printf("[S3ObjectURL] 成功生成预签名 URL: key=%s", key)
+	log.Printf("[S3ObjectURL] Successfully generated presigned URL: key=%s", key)
 	return presignedURL.URL
 }
 
-// S3Upload 上传文件到 AWS S3
+// S3Upload uploads file to AWS S3
 func S3Upload(r *http.Request) (string, error) {
 	ctx := context.Background()
 	client, err := getS3Client(ctx)
@@ -206,13 +214,13 @@ func S3Upload(r *http.Request) (string, error) {
 	return S3ObjectURL(key), nil
 }
 
-// MultipartPart 上传的分片信息
+// MultipartPart represents a multipart upload part
 type MultipartPart struct {
 	PartNumber int32
 	ETag       string
 }
 
-// S3InitPart 分片上传初始化
+// S3InitPart initializes multipart upload
 func S3InitPart(ext string) (string, string, error) {
 	ctx := context.Background()
 	client, err := getS3Client(ctx)
@@ -231,7 +239,7 @@ func S3InitPart(ext string) (string, string, error) {
 	return key, aws.ToString(resp.UploadId), nil
 }
 
-// S3PartUpload 分片上传
+// S3PartUpload uploads a part
 func S3PartUpload(r *http.Request) (string, error) {
 	ctx := context.Background()
 	client, err := getS3Client(ctx)
@@ -271,7 +279,7 @@ func S3PartUpload(r *http.Request) (string, error) {
 	return strings.Trim(aws.ToString(resp.ETag), "\""), nil
 }
 
-// S3PartUploadComplete 分片上传完成
+// S3PartUploadComplete completes multipart upload
 func S3PartUploadComplete(key, uploadID string, parts []MultipartPart) error {
 	ctx := context.Background()
 	client, err := getS3Client(ctx)

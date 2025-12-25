@@ -30,7 +30,7 @@ func (l *UserFileMoveLogic) UserFileMove(req *types.UserFileMoveRequest, userIde
 		Where("identity = ? AND user_identity = ?", req.ParentIdnetity, userIdentity).
 		First(parentData).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errors.New("文件夹不存在")
+		return nil, errors.New("folder does not exist")
 	}
 	if err != nil {
 		return nil, err

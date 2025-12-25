@@ -31,7 +31,7 @@ func (l *UserLoginLogic) UserLogin(req *types.LoginRequest) (resp *types.LoginRe
 		Where("name = ? AND password = ?", req.Name, helper.Md5(req.Password)).
 		First(user).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errors.New("用户名或密码错误")
+		return nil, errors.New("username or password is incorrect")
 	}
 	if err != nil {
 		return nil, err

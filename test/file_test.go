@@ -10,18 +10,18 @@ import (
 	"testing"
 )
 
-// 分片的大小
+// Chunk size
 // const chunkSize = 100 * 1024 * 1024 // 100MB
 const chunkSize = 1024 * 1024 // 1MB
 const sourceFile = "test.mp4"
 
-// 文件分片
+// File chunking
 func TestGenerateChunkFile(t *testing.T) {
 	fileInfo, err := os.Stat(sourceFile)
 	if err != nil {
 		t.Fatal(err)
 	}
-	// 分片的个数
+	// Number of chunks
 	chunkNum := math.Ceil(float64(fileInfo.Size()) / float64(chunkSize))
 	myFile, err := os.OpenFile(sourceFile, os.O_RDONLY, 0666)
 	if err != nil {
@@ -29,7 +29,7 @@ func TestGenerateChunkFile(t *testing.T) {
 	}
 	b := make([]byte, chunkSize)
 	for i := 0; i < int(chunkNum); i++ {
-		// 指定读取文件的起始位置
+		// Specify the starting position to read the file
 		myFile.Seek(int64(i*chunkSize), 0)
 		if chunkSize > fileInfo.Size()-int64(i*chunkSize) {
 			b = make([]byte, fileInfo.Size()-int64(i*chunkSize))
@@ -46,7 +46,7 @@ func TestGenerateChunkFile(t *testing.T) {
 	myFile.Close()
 }
 
-// 分片文件的合并
+// Merge chunk files
 func TestMergeChunkFile(t *testing.T) {
 	myFile, err := os.OpenFile("test2.mp4", os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
 	if err != nil {
@@ -56,7 +56,7 @@ func TestMergeChunkFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// 分片的个数
+	// Number of chunks
 	chunkNum := math.Ceil(float64(fileInfo.Size()) / float64(chunkSize))
 	for i := 0; i < int(chunkNum); i++ {
 		f, err := os.OpenFile("./"+strconv.Itoa(i)+".chunk", os.O_RDONLY, os.ModePerm)
@@ -74,9 +74,9 @@ func TestMergeChunkFile(t *testing.T) {
 	myFile.Close()
 }
 
-// 文件一致性校验
+// File consistency check
 func TestCheck(t *testing.T) {
-	// 获取第一个文件的信息
+	// Get first file info
 	file1, err := os.OpenFile("test.mp4", os.O_RDONLY, 0666)
 	if err != nil {
 		t.Fatal(err)
@@ -85,7 +85,7 @@ func TestCheck(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// 获取第二个文件的信息
+	// Get second file info
 	file2, err := os.OpenFile("test2.mp4", os.O_RDONLY, 0666)
 	if err != nil {
 		t.Fatal(err)

@@ -28,7 +28,7 @@ func (l *ShareBasicSaveLogic) ShareBasicSave(req *types.ShareBasicSaveRequest, u
 	rp := new(models.RepositoryPool)
 	err = l.svcCtx.DB.WithContext(l.ctx).Where("identity = ?", req.RepositoryIdentity).First(rp).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errors.New("资源不存在")
+		return nil, errors.New("resource does not exist")
 	}
 	if err != nil {
 		return nil, err

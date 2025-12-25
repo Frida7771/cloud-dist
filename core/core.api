@@ -1,21 +1,21 @@
 service core-api {
-	// 用户登录
+	// User login
 	@handler UserLogin
 	post /user/login(LoginRequest) returns (LoginReply)
 	
-	// 用户详情
+	// User details
 	@handler UserDetail
 	post /user/detail(UserDetailRequest) returns (UserDetailReply)
 	
-	// 验证码发送
+	// Send verification code
 	@handler MailCodeSendRegister
 	post /mail/code/send/register(MailCodeSendRequest) returns (MailCodeSendReply)
 	
-	// 用户注册
+	// User registration
 	@handler UserRegister
 	post /user/register(UserRegisterRequest) returns (UserRegisterReply)
 	
-	// 获取资源详情
+	// Get resource details
 	@handler ShareBasicDetail
 	get /share/basic/detail(ShareBasicDetailRequest) returns (ShareBasicDetailReply)
 	
@@ -25,59 +25,59 @@ service core-api {
 	middleware: Auth
 )
 service core-api {
-	// 文件上传
+	// File upload
 	@handler FileUpload
 	post /file/upload(FileUploadRequest) returns (FileUploadReply)
 	
-	// 用户文件的关联存储
+	// User file association storage
 	@handler UserRepositorySave
 	post /user/repository/save(UserRepositorySaveRequest) returns (UserRepositorySaveReply)
 	
-	// 用户文件列表
+	// User file list
 	@handler UserFileList
 	post /user/file/list(UserFileListRequest) returns (UserFileListReply)
 	
-	// 用户文件夹列表
+	// User folder list
 	@handler UserFolderList
 	post /user/folder/list(UserFolderListRequest) returns (UserFolderListReply)
 	
-	// 用户文件名称修改
+	// Update user file name
 	@handler UserFileNameUpdate
 	post /user/file/name/update(UserFileNameUpdateRequest) returns (UserFileNameUpdateReply)
 	
-	// 用户-文件夹创建
+	// Create user folder
 	@handler UserFolderCreate
 	post /user/folder/create(UserFolderCreateRequest) returns (UserFolderCreateReply)
 	
-	// 用户-文件删除
+	// Delete user file
 	@handler UserFileDelete
 	delete /user/file/delete(UserFileDeleteRequest) returns (UserFileDeleteReply)
 	
-	// 用户-文件移动
+	// Move user file
 	@handler UserFileMove
 	put /user/file/move(UserFileMoveRequest) returns (UserFileMoveReply)
 	
-	// 创建分享记录
+	// Create share record
 	@handler ShareBasicCreate
 	post /share/basic/create(ShareBasicCreateRequest) returns (ShareBasicCreateReply)
 	
-	// 资源保存
+	// Save shared resource
 	@handler ShareBasicSave
 	post /share/basic/save(ShareBasicSaveRequest) returns (ShareBasicSaveReply)
 	
-	// 刷新Authorization
+	// Refresh authorization
 	@handler RefreshAuthorization
 	post /refresh/authorization(RefreshAuthorizationRequest) returns (RefreshAuthorizationReply)
 	
-	// 文件上传前基本信息处理
+	// File upload prepare (basic info processing)
 	@handler FileUploadPrepare
 	post /file/upload/prepare(FileUploadPrepareRequest) returns (FileUploadPrepareReply)
 	
-	// 文件分片上传
+	// File chunk upload
 	@handler FileUploadChunk
 	post /file/upload/chunk(FileUploadChunkRequest) returns (FileUploadChunkReply)
 	
-	// 文件分片上传完成
+	// File chunk upload complete
 	@handler FileUploadChunkComplete
 	post /file/upload/chunk/complete(FileUploadChunkCompleteRequest) returns (FileUploadChunkCompleteReply)
 	
@@ -99,7 +99,7 @@ type UploadPart {
 }
 
 type FileUploadChunkCompleteReply {
-	Identity string `json:"identity"` // 存储池identity
+	Identity string `json:"identity"` // Repository pool identity
 }
 
 type FileUploadChunkRequest { // formdata
@@ -248,13 +248,13 @@ type FileUploadReply {
 }
 
 type UserRegisterRequest {
-	// 用户名
+	// Username
 	Name string `json:"name"`
-	// 密码
+	// Password
 	Password string `json:"password"`
-	// 邮箱
+	// Email
 	Email string `json:"email"`
-	// 验证码
+	// Verification code
 	Code string `json:"code"`
 }
 

@@ -24,13 +24,13 @@ func NewUserRegisterLogic(ctx context.Context, svcCtx *svc.ServiceContext) *User
 }
 
 func (l *UserRegisterLogic) UserRegister(req *types.UserRegisterRequest) (resp *types.UserRegisterReply, err error) {
-	// 判断code是否一致
+	// Verify code
 	code, err := l.svcCtx.RDB.Get(l.ctx, req.Email).Result()
 	if err != nil {
-		return nil, errors.New("该邮箱的验证码为空")
+		return nil, errors.New("verification code is empty for this email")
 	}
 	if code != req.Code {
-		err = errors.New("验证码错误")
+		err = errors.New("verification code is incorrect")
 		return
 	}
 	var cnt int64
@@ -39,17 +39,17 @@ func (l *UserRegisterLogic) UserRegister(req *types.UserRegisterRequest) (resp *
 		return nil, err
 	}
 	if cnt > 0 {
-		err = errors.New("用户名已存在")
+		err = errors.New("username already exists")
 		return
 	}
-	// 数据入库
+	// Save user data
 	user := &models.UserBasic{
 		Identity:    helper.UUID(),
 		Name:        req.Name,
 		Password:    helper.Md5(req.Password),
 		Email:       req.Email,
-		NowVolume:   0,          // 初始已使用容量为 0
-		TotalVolume: 5368709120, // 默认总容量 5GB (5 * 1024 * 1024 * 1024)
+		NowVolume:   0,          // Initial used volume is 0
+		TotalVolume: 5368709120, // Default total volume 5GB (5 * 1024 * 1024 * 1024)
 	}
 	if err = l.svcCtx.DB.WithContext(l.ctx).Create(user).Error; err != nil {
 		return nil, err

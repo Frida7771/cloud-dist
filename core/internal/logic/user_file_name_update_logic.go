@@ -33,7 +33,7 @@ func (l *UserFileNameUpdateLogic) UserFileNameUpdate(req *types.UserFileNameUpda
 		return nil, err
 	}
 	if cnt > 0 {
-		return nil, errors.New("该名称已存在")
+		return nil, errors.New("name already exists")
 	}
 
 	err = l.svcCtx.DB.WithContext(l.ctx).Model(&models.UserRepository{}).

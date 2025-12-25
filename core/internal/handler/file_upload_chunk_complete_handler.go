@@ -30,7 +30,7 @@ func FileUploadChunkCompleteHandler(svcCtx *svc.ServiceContext) gin.HandlerFunc 
 			return
 		}
 		if req.Size+ub.NowVolume > ub.TotalVolume {
-			respondError(c, errors.New("已超出当前容量"))
+			respondError(c, errors.New("storage capacity exceeded"))
 			return
 		}
 

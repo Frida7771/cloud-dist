@@ -23,7 +23,7 @@ func NewUserFolderCreateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 }
 
 func (l *UserFolderCreateLogic) UserFolderCreate(req *types.UserFolderCreateRequest, userIdentity string) (resp *types.UserFolderCreateReply, err error) {
-	// 判断当前名称在该层级下是否存在
+	// Check if name already exists at this level
 	var cnt int64
 	if err = l.svcCtx.DB.WithContext(l.ctx).Model(&models.UserRepository{}).
 		Where("name = ? AND parent_id = ? AND user_identity = ?", req.Name, req.ParentId, userIdentity).
@@ -31,9 +31,9 @@ func (l *UserFolderCreateLogic) UserFolderCreate(req *types.UserFolderCreateRequ
 		return nil, err
 	}
 	if cnt > 0 {
-		return nil, errors.New("该名称已存在")
+		return nil, errors.New("name already exists")
 	}
-	// 创建文件夹
+	// Create folder
 	data := &models.UserRepository{
 		Identity:     helper.UUID(),
 		UserIdentity: userIdentity,

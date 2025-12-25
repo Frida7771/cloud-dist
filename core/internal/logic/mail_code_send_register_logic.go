@@ -27,36 +27,36 @@ func NewMailCodeSendRegisterLogic(ctx context.Context, svcCtx *svc.ServiceContex
 }
 
 func (l *MailCodeSendRegisterLogic) MailCodeSendRegister(req *types.MailCodeSendRequest) (resp *types.MailCodeSendReply, err error) {
-	// 该邮箱未被注册
+	// Check if email is not registered
 	var cnt int64
 	if err = l.svcCtx.DB.WithContext(l.ctx).Model(&models.UserBasic{}).
 		Where("email = ?", req.Email).Count(&cnt).Error; err != nil {
 		return
 	}
 	if cnt > 0 {
-		err = errors.New("该邮箱已被注册")
+		err = errors.New("email is already registered")
 		return
 	}
-	// 检查是否在最小发送间隔内（60秒），防止频繁发送
+	// Check if within minimum send interval (60 seconds) to prevent frequent sending
 	codeTTL, _ := l.svcCtx.RDB.TTL(l.ctx, req.Email).Result()
 	if codeTTL.Seconds() > 60 {
-		return nil, errors.New("请等待60秒后再重新发送验证码")
+		return nil, errors.New("please wait 60 seconds before resending verification code")
 	}
-	// 获取验证码
+	// Generate verification code
 	code := helper.RandCode()
-	log.Printf("[MailCodeSend] 准备发送验证码到邮箱: %s, 验证码: %s", req.Email, code)
+	log.Printf("[MailCodeSend] Preparing to send verification code to email: %s, code: %s", req.Email, code)
 
-	// 存储验证码（覆盖旧的）
+	// Store verification code (overwrite old one)
 	l.svcCtx.RDB.Set(l.ctx, req.Email, code, time.Second*time.Duration(define.CodeExpire))
 
-	// 发送验证码
+	// Send verification code
 	err = helper.MailSendCode(req.Email, code)
 	if err != nil {
-		// 如果发送失败，删除已存储的验证码
+		// If sending fails, delete stored verification code
 		l.svcCtx.RDB.Del(l.ctx, req.Email)
-		log.Printf("[MailCodeSend] 发送失败: %v", err)
-		return nil, fmt.Errorf("发送验证码失败: %v", err)
+		log.Printf("[MailCodeSend] Send failed: %v", err)
+		return nil, fmt.Errorf("failed to send verification code: %v", err)
 	}
-	log.Printf("[MailCodeSend] 验证码发送成功到: %s", req.Email)
+	log.Printf("[MailCodeSend] Verification code sent successfully to: %s", req.Email)
 	return
 }

@@ -21,7 +21,7 @@ func (m *AuthMiddleware) Handle(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
-	// 移除 "Bearer " 前缀（如果存在）
+	// Remove "Bearer " prefix if present
 	token := strings.TrimPrefix(auth, "Bearer ")
 	token = strings.TrimSpace(token)
 	uc, err := helper.AnalyzeToken(token)

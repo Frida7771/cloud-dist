@@ -26,7 +26,7 @@ func NewUserRepositorySaveLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *UserRepositorySaveLogic) UserRepositorySave(req *types.UserRepositorySaveRequest, userIdentity string) (resp *types.UserRepositorySaveReply, err error) {
-	// 判断文件是否超容量
+	// Check if file exceeds capacity
 	rp := new(models.RepositoryPool)
 	if err = l.svcCtx.DB.WithContext(l.ctx).
 		Select("size").Where("identity = ?", req.RepositoryIdentity).First(rp).Error; err != nil {
@@ -38,21 +38,21 @@ func (l *UserRepositorySaveLogic) UserRepositorySave(req *types.UserRepositorySa
 		return
 	}
 	if ub.NowVolume+rp.Size > ub.TotalVolume {
-		err = errors.New("已超出当前容量")
+		err = errors.New("storage capacity exceeded")
 		return
 	}
 
-	// 更新当前容量
-	log.Printf("[UserRepositorySave] 更新用户容量: 用户=%s, 文件大小=%d, 当前已使用=%d, 更新后=%d",
+	// Update current capacity
+	log.Printf("[UserRepositorySave] Updating user capacity: user=%s, file size=%d, current used=%d, after update=%d",
 		userIdentity, rp.Size, ub.NowVolume, ub.NowVolume+rp.Size)
 	if err = l.svcCtx.DB.WithContext(l.ctx).Model(&models.UserBasic{}).
 		Where("identity = ?", userIdentity).
 		UpdateColumn("now_volume", gorm.Expr("now_volume + ?", rp.Size)).Error; err != nil {
-		log.Printf("[UserRepositorySave] 更新容量失败: %v", err)
+		log.Printf("[UserRepositorySave] Failed to update capacity: %v", err)
 		return
 	}
-	log.Printf("[UserRepositorySave] 容量更新成功")
-	// 新增关联记录
+	log.Printf("[UserRepositorySave] Capacity updated successfully")
+	// Create association record
 	ur := &models.UserRepository{
 		Identity:           helper.UUID(),
 		UserIdentity:       userIdentity,
