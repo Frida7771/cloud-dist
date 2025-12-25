@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CloudDist Quick Tester</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; line-height: 1.4; }
+    section { border: 1px solid #ddd; padding: 16px; margin-bottom: 20px; border-radius: 8px; }
+    label { display: block; margin-bottom: 6px; font-weight: bold; }
+    input, textarea { width: 100%; padding: 8px; margin-bottom: 10px; }
+    button { padding: 8px 16px; cursor: pointer; }
+    #log { height: 200px; }
+  </style>
+</head>
+<body>
+  <h1>CloudDist API Tester</h1>
+  <p>Make sure Spring Boot application is running on <code>http://localhost:8888</code>, then use this page to test the API.</p>
+
+  <section>
+    <h2>Send Registration Verification Code</h2>
+    <label>Email</label>
+    <input id="registerEmail" type="email" placeholder="foo@example.com" />
+    <button onclick="sendMailCode()">Send Code</button>
+  </section>
+
+  <section>
+    <h2>User Registration</h2>
+    <label>Email</label>
+    <input id="regEmail" type="email" />
+    <label>Name</label>
+    <input id="regName" type="text" />
+    <label>Password</label>
+    <input id="regPassword" type="password" />
+    <label>Code</label>
+    <input id="regCode" type="text" />
+    <button onclick="registerUser()">Register</button>
+  </section>
+
+  <section>
+    <h2>Login</h2>
+    <label>Name</label>
+    <input id="loginName" type="text" />
+    <label>Password</label>
+    <input id="loginPassword" type="password" />
+    <button onclick="login()">Login</button>
+    <p>Token: <span id="tokenOutput">N/A</span></p>
+  </section>
+
+  <section>
+    <h2>View User Details (Login Required)</h2>
+    <button onclick="fetchProfile()">Fetch Detail</button>
+  </section>
+
+  <section>
+    <h2>File Upload (multipart)</h2>
+    <input id="fileInput" type="file" />
+    <button onclick="uploadFile()">Upload</button>
+  </section>
+
+  <section>
+    <h2>File List (Login Required)</h2>
+    <button onclick="loadFileList()">Refresh File List</button>
+    <div id="fileList" style="margin-top: 10px;"></div>
+  </section>
+
+  <section>
+    <h2>Create Share (Login Required)</h2>
+    <label>File Identity (Get from file list)</label>
+    <input id="shareFileIdentity" type="text" placeholder="user_repository_identity" />
+    <label>Expiration Time (seconds, 0=never expires)</label>
+    <input id="shareExpiredTime" type="number" value="604800" placeholder="604800 (7 days)" />
+    <button onclick="createShare()">Create Share</button>
+    <div id="shareResult" style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 4px;"></div>
+  </section>
+
+  <section>
+    <h2>View Share (No Login Required)</h2>
+    <label>Share Identity</label>
+    <input id="viewShareIdentity" type="text" placeholder="Share link identity" />
+    <button onclick="viewShare()">View Share</button>
+    <div id="shareDetail" style="margin-top: 10px;"></div>
+  </section>
+
+  <section>
+    <h2>Save Shared File (Login Required)</h2>
+    <label>Repository Identity (Get from share details)</label>
+    <input id="saveShareRepoIdentity" type="text" placeholder="repository_identity" />
+    <label>Parent Folder ID (0=root directory)</label>
+    <input id="saveShareParentId" type="number" value="0" />
+    <button onclick="saveShare()">Save to My Cloud Disk</button>
+  </section>
+
+  <section>
+    <h2>Console</h2>
+    <textarea id="log" readonly></textarea>
+  </section>
+
+  <script>
+    const apiBase = window.location.origin;
+    let token = "";
+
+    function log(message) {
+      const logEl = document.getElementById("log");
+      logEl.value = `[${new Date().toLocaleTimeString()}] ${message}\n${logEl.value}`;
+    }
+
+    async function request(path, options = {}) {
+      const headers = options.headers || {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      if (!(options.body instanceof FormData)) {
+        headers["Content-Type"] = "application/json";
+      }
+      try {
+        const res = await fetch(`${apiBase}${path}`, { ...options, headers });
+        const text = await res.text();
+        log(`${path} => ${res.status} ${res.statusText}\n${text}`);
+        
+        let result = null;
+        if (text && text.trim()) {
+          try {
+            result = JSON.parse(text);
+          } catch (e) {
+            // 如果不是 JSON，返回文本
+            result = text;
+          }
+        }
+        
+        // 检查 HTTP 状态码
+        if (!res.ok) {
+          // HTTP 错误状态码（4xx, 5xx）
+          if (result && typeof result === 'object' && result.error) {
+            return { error: result.error };
+          }
+          return { error: `HTTP ${res.status}: ${res.statusText}` };
+        }
+        
+        // 检查是否有错误（Result 格式）
+        if (result && typeof result === 'object') {
+          if (result.code !== undefined && result.code !== 200 && result.code !== null) {
+            return { error: result.msg || result.message || "Unknown error" };
+          }
+          // 如果是错误响应但没有 code 字段，检查 error 字段
+          if (result.error) {
+            return { error: result.error };
+          }
+        }
+        
+        return result;
+      } catch (err) {
+        log(`Error: ${err.message}`);
+        throw err;
+      }
+    }
+
+    async function sendMailCode() {
+      const email = document.getElementById("registerEmail").value.trim();
+      if (!email) {
+        alert("Please enter an email address.");
+        return;
+      }
+      try {
+        const formData = new URLSearchParams();
+        formData.append("email", email);
+        const result = await request("/mail/code/send/register?" + formData.toString(), {
+          method: "POST",
+        });
+        if (result && result.error) {
+          alert("Error: " + result.error);
+        } else {
+          alert("Verification code has been sent, please check your email (including spam folder)");
+        }
+      } catch (err) {
+        alert("Request failed: " + err.message);
+      }
+    }
+
+    async function registerUser() {
+      const email = document.getElementById("regEmail").value.trim();
+      const name = document.getElementById("regName").value.trim();
+      const password = document.getElementById("regPassword").value;
+      const code = document.getElementById("regCode").value.trim();
+      
+      // 前端验证
+      if (!email) {
+        alert("Please enter an email address.");
+        return;
+      }
+      if (!name) {
+        alert("Please enter a username.");
+        return;
+      }
+      if (!password) {
+        alert("Please enter a password.");
+        return;
+      }
+      if (password.length < 6) {
+        alert("Password must be at least 6 characters long.");
+        return;
+      }
+      if (!code) {
+        alert("Please enter the verification code.");
+        return;
+      }
+      
+      // 简单的邮箱格式验证
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        alert("Please enter a valid email address.");
+        return;
+      }
+      
+      try {
+        const formData = new URLSearchParams();
+        formData.append("email", email);
+        formData.append("name", name);
+        formData.append("password", password);
+        formData.append("code", code);
+        const result = await request("/user/register?" + formData.toString(), {
+          method: "POST",
+        });
+        
+        // 检查响应
+        if (!result) {
+          // 空响应表示成功（204 No Content 或 200 OK with no body）
+          alert("Registration successful! Please login.");
+          // 清空表单
+          document.getElementById("regEmail").value = "";
+          document.getElementById("regName").value = "";
+          document.getElementById("regPassword").value = "";
+          document.getElementById("regCode").value = "";
+        } else if (result.error) {
+          alert("Error: " + result.error);
+        } else if (result.code && result.code !== 200) {
+          alert("Error: " + (result.msg || result.message || "Registration failed"));
+        } else {
+          alert("Registration successful! Please login.");
+          // 清空表单
+          document.getElementById("regEmail").value = "";
+          document.getElementById("regName").value = "";
+          document.getElementById("regPassword").value = "";
+          document.getElementById("regCode").value = "";
+        }
+      } catch (err) {
+        alert("Registration failed: " + err.message);
+      }
+    }
+
+    async function login() {
+      const name = document.getElementById("loginName").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      
+      // 前端验证
+      if (!name) {
+        alert("Please enter your username.");
+        return;
+      }
+      if (!password) {
+        alert("Please enter your password.");
+        return;
+      }
+      
+      try {
+        const data = await request("/user/login", {
+          method: "POST",
+          body: JSON.stringify({ name, password }),
+        });
+        
+        if (data && data.error) {
+          alert("Login failed: " + data.error);
+          return;
+        }
+        
+        if (data && data.code && data.code !== 200) {
+          alert("Login failed: " + (data.msg || data.message || "Unknown error"));
+          return;
+        }
+        
+        if (data && data.token) {
+          token = data.token;
+          if (data.refreshToken) {
+            // 可以保存 refreshToken 到 localStorage
+            localStorage.setItem("refreshToken", data.refreshToken);
+          }
+          document.getElementById("tokenOutput").textContent = token.slice(0, 24) + "...";
+          log("Login successful! Token stored.");
+          alert("Login successful!");
+        } else {
+          alert("Login failed: Invalid response from server");
+        }
+      } catch (err) {
+        alert("Login failed: " + err.message);
+        log("Login error: " + err.message);
+      }
+    }
+
+    async function fetchProfile() {
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+      try {
+        const formData = new URLSearchParams();
+        formData.append("identity", ""); // You need to get user identity from login response
+        const result = await request("/user/detail?" + formData.toString(), {
+          method: "POST",
+        });
+        if (result) {
+          log("User details: " + JSON.stringify(result, null, 2));
+          alert("User details logged to console");
+        }
+      } catch (err) {
+        alert("Failed to fetch profile: " + err.message);
+      }
+    }
+
+    async function uploadFile() {
+      const fileInput = document.getElementById("fileInput");
+      if (!fileInput.files.length) {
+        alert("Please choose a file.");
+        return;
+      }
+      try {
+        const form = new FormData();
+        form.append("file", fileInput.files[0]);
+        const result = await request("/file/upload", { method: "POST", body: form });
+        if (result && result.error) {
+          alert("Error: " + result.error);
+        } else {
+          alert("File uploaded successfully!");
+          loadFileList(); // Automatically refresh file list
+        }
+      } catch (err) {
+        alert("Upload failed: " + err.message);
+      }
+    }
+
+    async function loadFileList() {
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+      try {
+        const data = await request("/user/file/list", {
+          method: "POST",
+          body: JSON.stringify({ page: 1, size: 50 }),
+        });
+        if (data && data.list) {
+          const fileListEl = document.getElementById("fileList");
+          if (data.list.length === 0) {
+            fileListEl.innerHTML = "<p>No files</p>";
+            return;
+          }
+          let html = "<table border='1' cellpadding='8' style='width:100%; border-collapse: collapse;'>";
+          html += "<tr><th>File Name</th><th>Type</th><th>Size</th><th>Action</th></tr>";
+          data.list.forEach(file => {
+            const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+            html += `<tr>
+              <td>${file.name}</td>
+              <td>${file.ext || 'Folder'}</td>
+              <td>${sizeMB} MB</td>
+              <td>
+                <a href="${file.path}" target="_blank" style="margin-right: 8px;">Download</a>
+                <button onclick="shareFile('${file.identity}')" style="padding: 4px 8px; cursor: pointer;">Share</button>
+              </td>
+            </tr>`;
+          });
+          html += "</table>";
+          html += `<p>Total ${data.count} files</p>`;
+          fileListEl.innerHTML = html;
+        }
+      } catch (err) {
+        alert("Failed to load file list: " + err.message);
+      }
+    }
+
+    async function shareFile(fileIdentity) {
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+      document.getElementById("shareFileIdentity").value = fileIdentity;
+      await createShare();
+    }
+
+    async function createShare() {
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+      const fileIdentity = document.getElementById("shareFileIdentity").value.trim();
+      const expiredTime = parseInt(document.getElementById("shareExpiredTime").value) || 0;
+      if (!fileIdentity) {
+        alert("Please enter file Identity");
+        return;
+      }
+      const resultEl = document.getElementById("shareResult");
+      resultEl.innerHTML = "<p>Creating share...</p>";
+      
+      try {
+        const result = await request("/share/basic/create", {
+          method: "POST",
+          body: JSON.stringify({
+            user_repository_identity: fileIdentity,
+            expired_time: expiredTime
+          }),
+        });
+        
+        log(`Share create response: ${JSON.stringify(result)}`);
+        
+        if (result && result.error) {
+          resultEl.innerHTML = `<p style="color: red;"><strong>Error:</strong> ${result.error}</p>`;
+          alert("Error: " + result.error);
+        } else if (result && result.identity) {
+          const shareUrl = `${apiBase}/share/basic/detail?identity=${result.identity}`;
+          resultEl.innerHTML = `
+            <p><strong>Share created successfully!</strong></p>
+            <p>Share Identity: <code>${result.identity}</code></p>
+            <p>Share link: <a href="${shareUrl}" target="_blank">${shareUrl}</a></p>
+            <button onclick="copyToClipboard('${shareUrl}')" style="margin-top: 8px;">Copy Link</button>
+          `;
+          log(`Share created successfully: ${result.identity}`);
+        } else {
+          // 如果响应格式不对，显示原始响应
+          resultEl.innerHTML = `<p style="color: orange;"><strong>Unexpected response:</strong> ${JSON.stringify(result)}</p>`;
+          log(`Unexpected response format: ${JSON.stringify(result)}`);
+          alert("Unexpected response from server. Check console for details.");
+        }
+      } catch (err) {
+        resultEl.innerHTML = `<p style="color: red;"><strong>Failed:</strong> ${err.message}</p>`;
+        alert("Failed to create share: " + err.message);
+        log(`Share create error: ${err.message}`);
+      }
+    }
+
+    async function viewShare() {
+      const shareIdentity = document.getElementById("viewShareIdentity").value.trim();
+      if (!shareIdentity) {
+        alert("Please enter share Identity");
+        return;
+      }
+      try {
+        const result = await request(`/share/basic/detail?identity=${shareIdentity}`, {
+          method: "GET",
+        });
+        if (result && result.error) {
+          alert("Error: " + result.error);
+        } else if (result) {
+          const detailEl = document.getElementById("shareDetail");
+          const sizeMB = (result.size / 1024 / 1024).toFixed(2);
+          detailEl.innerHTML = `
+            <div style="border: 1px solid #ddd; padding: 12px; border-radius: 4px;">
+              <p><strong>File Name:</strong> ${result.name}</p>
+              <p><strong>Type:</strong> ${result.ext || 'Unknown'}</p>
+              <p><strong>Size:</strong> ${sizeMB} MB</p>
+              <p><strong>Download:</strong> <a href="${result.path}" target="_blank">Click to Download</a></p>
+              <p><strong>Repository Identity:</strong> <code>${result.repository_identity}</code></p>
+              <button onclick="document.getElementById('saveShareRepoIdentity').value='${result.repository_identity}'" style="margin-top: 8px;">
+                Copy to Save Box
+              </button>
+            </div>
+          `;
+          log(`Share details: ${JSON.stringify(result)}`);
+        }
+      } catch (err) {
+        alert("Failed to view share: " + err.message);
+      }
+    }
+
+    async function saveShare() {
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+      const repoIdentity = document.getElementById("saveShareRepoIdentity").value.trim();
+      const parentId = parseInt(document.getElementById("saveShareParentId").value) || 0;
+      if (!repoIdentity) {
+        alert("Please enter Repository Identity");
+        return;
+      }
+      try {
+        const result = await request("/share/basic/save", {
+          method: "POST",
+          body: JSON.stringify({
+            repository_identity: repoIdentity,
+            parent_id: parentId
+          }),
+        });
+        if (result && result.error) {
+          alert("Error: " + result.error);
+        } else {
+          alert("File has been saved to your cloud disk!");
+          loadFileList(); // Refresh file list
+        }
+      } catch (err) {
+        alert("Failed to save share: " + err.message);
+      }
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Link has been copied to clipboard!");
+      }).catch(err => {
+        alert("Failed to copy link: " + err.message);
+      });
+    }
+  </script>
+</body>
+</html>
+
