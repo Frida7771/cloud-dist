@@ -24,4 +24,3 @@ configs/config.example.yaml
 *.ts
 *.chunk
 
-test/
