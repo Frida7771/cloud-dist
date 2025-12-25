@@ -1,0 +1,80 @@
+package logic
+
+import (
+	"context"
+	"errors"
+
+	"cloud-disk/core/define"
+	"cloud-disk/core/internal/svc"
+	"cloud-disk/core/internal/types"
+	"cloud-disk/core/models"
+
+	"gorm.io/gorm"
+)
+
+type UserFileListLogic struct {
+	ctx    context.Context
+	svcCtx *svc.ServiceContext
+}
+
+func NewUserFileListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UserFileListLogic {
+	return &UserFileListLogic{
+		ctx:    ctx,
+		svcCtx: svcCtx,
+	}
+}
+
+func (l *UserFileListLogic) UserFileList(req *types.UserFileListRequest, userIdentity string) (resp *types.UserFileListReply, err error) {
+	resp = new(types.UserFileListReply)
+
+	size := req.Size
+	if size == 0 {
+		size = define.PageSize
+	}
+	page := req.Page
+	if page == 0 {
+		page = 1
+	}
+	offset := (page - 1) * size
+
+	var parentID int64
+	if req.Identity != "" {
+		ur := new(models.UserRepository)
+		err = l.svcCtx.DB.WithContext(l.ctx).Select("id").Where("identity = ?", req.Identity).First(ur).Error
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+		if err == nil {
+			parentID = ur.ID
+		}
+	}
+
+	files := make([]*types.UserFile, 0)
+	query := l.svcCtx.DB.WithContext(l.ctx).Table("user_repository").
+		Where("user_repository.user_identity = ?", userIdentity).
+		Where("user_repository.parent_id = ?", parentID).
+		Where("user_repository.deleted_at IS NULL").
+		Joins("LEFT JOIN repository_pool ON user_repository.repository_identity = repository_pool.identity").
+		Select("user_repository.id, user_repository.identity, user_repository.repository_identity, user_repository.ext, " +
+			"user_repository.name, repository_pool.path, repository_pool.size")
+
+	if err = query.
+		Limit(size).
+		Offset(offset).
+		Scan(&files).Error; err != nil {
+		return nil, err
+	}
+
+	var count int64
+	if err = l.svcCtx.DB.WithContext(l.ctx).Model(&models.UserRepository{}).
+		Where("parent_id = ? AND user_identity = ?", parentID, userIdentity).
+		Where("deleted_at IS NULL").
+		Count(&count).Error; err != nil {
+		return nil, err
+	}
+
+	resp.List = files
+	resp.Count = count
+
+	return
+}
