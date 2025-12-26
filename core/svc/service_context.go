@@ -37,11 +37,15 @@ func NewServiceContext(c appcfg.Config) (*ServiceContext, error) {
 		c.S3.Endpoint,
 	)
 
+	// Create auth middleware with Redis client for token blacklist
+	authMiddleware := middleware.NewAuthMiddleware()
+	authMiddleware.SetRedisClient(rdb)
+	
 	return &ServiceContext{
 		Config: c,
 		DB:     db,
 		RDB:    rdb,
-		Auth:   middleware.NewAuthMiddleware().Handle,
+		Auth:   authMiddleware.Handle,
 	}, nil
 }
 

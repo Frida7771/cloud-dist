@@ -151,12 +151,13 @@ func getS3Client(ctx context.Context) (*s3.Client, error) {
 	return s3Client, s3ClientErr
 }
 
-// S3ObjectURL returns a presigned URL for the object (valid for 1 hour)
-func S3ObjectURL(key string) string {
+// S3PresignedURL generates a presigned URL for S3 object with specified expiration time
+// expiresIn: expiration time in hours (e.g., 72 for 3 days)
+func S3PresignedURL(key string, expiresInHours int) string {
 	ctx := context.Background()
 	client, err := getS3Client(ctx)
 	if err != nil {
-		log.Printf("[S3ObjectURL] Failed to create S3 client: %v", err)
+		log.Printf("[S3PresignedURL] Failed to create S3 client: %v", err)
 		// If unable to create client, return regular URL (for debugging)
 		region := define.S3Region
 		if region == "" {
@@ -170,11 +171,11 @@ func S3ObjectURL(key string) string {
 		Bucket: aws.String(define.S3Bucket),
 		Key:    aws.String(key),
 	}, func(opts *s3.PresignOptions) {
-		opts.Expires = time.Duration(1 * time.Hour) // 1 hour validity
+		opts.Expires = time.Duration(expiresInHours) * time.Hour
 	})
 
 	if err != nil {
-		log.Printf("[S3ObjectURL] Failed to generate presigned URL: %v, key=%s", err, key)
+		log.Printf("[S3PresignedURL] Failed to generate presigned URL: %v, key=%s", err, key)
 		// If presigned URL generation fails, return regular URL (for debugging)
 		region := define.S3Region
 		if region == "" {
@@ -183,11 +184,12 @@ func S3ObjectURL(key string) string {
 		return fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", define.S3Bucket, region, key)
 	}
 
-	log.Printf("[S3ObjectURL] Successfully generated presigned URL: key=%s", key)
+	log.Printf("[S3PresignedURL] Successfully generated presigned URL: key=%s, expiresIn=%d hours", key, expiresInHours)
 	return presignedURL.URL
 }
 
-// S3Upload uploads file to AWS S3
+// S3Upload uploads file to AWS S3 and returns the S3 key
+// The key is stored in database and used later for downloading via /file/download endpoint
 func S3Upload(r *http.Request) (string, error) {
 	ctx := context.Background()
 	client, err := getS3Client(ctx)
@@ -211,7 +213,9 @@ func S3Upload(r *http.Request) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return S3ObjectURL(key), nil
+	// Return the S3 key which will be stored in database
+	// Files are accessed via permanent /file/download endpoint
+	return key, nil
 }
 
 // MultipartPart represents a multipart upload part
@@ -305,4 +309,33 @@ func S3PartUploadComplete(key, uploadID string, parts []MultipartPart) error {
 		},
 	})
 	return err
+}
+
+// S3Download downloads a file from S3 and returns the file content and metadata
+func S3Download(key string) (io.ReadCloser, *s3.HeadObjectOutput, error) {
+	ctx := context.Background()
+	client, err := getS3Client(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Get object metadata first
+	headResp, err := client.HeadObject(ctx, &s3.HeadObjectInput{
+		Bucket: aws.String(define.S3Bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Get object content
+	getResp, err := client.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(define.S3Bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return getResp.Body, headResp, nil
 }

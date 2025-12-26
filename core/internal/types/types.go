@@ -201,3 +201,106 @@ type MailCodeSendRequest struct {
 
 type MailCodeSendReply struct {
 }
+
+type UserLogoutRequest struct {
+}
+
+type UserLogoutReply struct {
+}
+
+// Friend request types
+type FriendRequestSendRequest struct {
+	ToUserIdentity string `json:"to_user_identity"` // Email or user identity
+	Message        string `json:"message,optional"`
+}
+
+type FriendRequestSendReply struct {
+	Identity string `json:"identity"`
+}
+
+type FriendRequestListRequest struct {
+	Type string `json:"type,optional"` // sent, received, all
+}
+
+type FriendRequestListReply struct {
+	List []*FriendRequestItem `json:"list"`
+}
+
+type FriendRequestItem struct {
+	Identity         string `json:"identity"`
+	FromUserIdentity string `json:"from_user_identity"`
+	ToUserIdentity   string `json:"to_user_identity"`
+	FromUserName     string `json:"from_user_name"`
+	ToUserName       string `json:"to_user_name"`
+	Status           string `json:"status"`
+	Message          string `json:"message"`
+	CreatedAt        string `json:"created_at"`
+}
+
+type FriendRequestRespondRequest struct {
+	Identity string `json:"identity"`
+	Action   string `json:"action"` // accept, reject
+}
+
+type FriendRequestRespondReply struct {
+}
+
+// Friend list types
+type FriendListRequest struct {
+}
+
+type FriendListReply struct {
+	List []*FriendItem `json:"list"`
+}
+
+type FriendItem struct {
+	Identity     string `json:"identity"`
+	UserIdentity string `json:"user_identity"`
+	UserName     string `json:"user_name"`
+	UserEmail    string `json:"user_email"`
+	Status       string `json:"status"`
+	CreatedAt    string `json:"created_at"`
+}
+
+// Friend share types
+type FriendShareCreateRequest struct {
+	ToUserIdentity         string `json:"to_user_identity"`         // Friend's user identity
+	UserRepositoryIdentity string `json:"user_repository_identity"` // File to share
+	Message                string `json:"message,optional"`
+}
+
+type FriendShareCreateReply struct {
+	Identity string `json:"identity"`
+}
+
+type FriendShareListRequest struct {
+	Type string `json:"type,optional"` // sent, received, all
+}
+
+type FriendShareListReply struct {
+	List []*FriendShareItem `json:"list"`
+}
+
+type FriendShareItem struct {
+	Identity               string `json:"identity"`
+	FromUserIdentity       string `json:"from_user_identity"`
+	FromUserName           string `json:"from_user_name"`
+	ToUserIdentity         string `json:"to_user_identity"`
+	ToUserName             string `json:"to_user_name"`
+	RepositoryIdentity     string `json:"repository_identity"`
+	UserRepositoryIdentity string `json:"user_repository_identity"`
+	FileName               string `json:"file_name"`
+	FileExt                string `json:"file_ext"`
+	FileSize               int64  `json:"file_size"`
+	Path                   string `json:"path"` // Download URL
+	Message                string `json:"message"`
+	IsRead                 bool   `json:"is_read"`
+	CreatedAt              string `json:"created_at"`
+}
+
+type FriendShareMarkReadRequest struct {
+	Identity string `json:"identity"`
+}
+
+type FriendShareMarkReadReply struct {
+}

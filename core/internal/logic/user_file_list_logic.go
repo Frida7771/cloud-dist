@@ -73,6 +73,16 @@ func (l *UserFileListLogic) UserFileList(req *types.UserFileListRequest, userIde
 		return nil, err
 	}
 
+		// Convert repository identity to download endpoint URL for each file
+		// This provides permanent download links that don't expire
+		for _, file := range files {
+			if file.RepositoryIdentity != "" {
+				// Use permanent download endpoint URL
+				// This URL will work as long as user has permission
+				file.Path = "/file/download?identity=" + file.RepositoryIdentity
+			}
+		}
+
 	resp.List = files
 	resp.Count = count
 

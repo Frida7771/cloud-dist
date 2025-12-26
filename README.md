@@ -1,45 +1,68 @@
 # CloudDist
 
-> Lightweight cloud drive backend built with Gin + GORM.
+A lightweight cloud storage backend built with Go, Gin, and GORM.
 
-## Getting Started
+## Prerequisites
+
+- Go 1.23+
+- MySQL
+- Redis
+- AWS S3 (or S3-compatible storage like MinIO)
+
+## Quick Start
+
+### 1. Install Dependencies
 
 ```bash
-# Install dependencies
 go mod tidy
-# Start the service
-go run ./cmd/cloud-disk -config configs/config.yaml
 ```
 
-### Environment Variables
+### 2. Setup Database
 
 ```bash
-# AWS S3
-export AWSAccessKeyID=AKIAxxx
-export AWSSecretAccessKey=xxxx
+mysql -u root -p < setup_db.sql
+```
+
+### 3. Configure
+
+Edit `configs/config.yaml` with your MySQL and Redis connection details.
+
+### 4. Set Environment Variables (Optional)
+
+```bash
+export AWSAccessKeyID=your-access-key
+export AWSSecretAccessKey=your-secret-key
 export S3Bucket=your-bucket-name
 export AWSRegion=us-east-1
-# Optional: custom endpoint (S3-compatible)
-# export S3Endpoint=https://s3.amazonaws.com
-
-# SendGrid
-export SendGridAPIKey=SG.xxxxxx
+export SendGridAPIKey=your-sendgrid-key  # For email verification
 ```
 
-- AWS S3 Console: https://s3.console.aws.amazon.com/s3/home  
-- AWS S3 Docs: https://docs.aws.amazon.com/s3/index.html
+### 5. Run
+
+```bash
+go run ./cmd/cloud-dist/main.go -config configs/config.yaml
+```
+
+Service runs on `http://0.0.0.0:8888`
 
 ## Features
 
-- **User Module**
-  - Password login
-  - Authorization refresh
-  - Email registration
-  - User detail & quota
-- **Storage Pool**
-  - Central repository: upload, instant upload, multipart upload, AWS S3 integration
-  - Personal repository: link files, list files, rename, create folders, delete, move
-- **Share Module**
-  - Create share record
-  - Retrieve resource detail
-  - Save shared resource to personal space
+- **User Management**: Registration, login, logout with JWT authentication
+- **File Storage**: Upload, download, organize files with S3 backend
+- **File Management**: Create folders, rename, move, delete files
+- **Sharing**: Public file sharing with expiration
+- **Friend System**: Add friends, send friend requests, share files with friends
+- **Token Management**: JWT-based auth with refresh tokens and blacklist support
+
+
+## Architecture
+
+- **Framework**: Gin web framework
+- **ORM**: GORM
+- **Storage**: AWS S3
+- **Cache**: Redis (for verification codes and token blacklist)
+- **Auth**: JWT tokens with Redis blacklist
+
+## License
+
+MIT

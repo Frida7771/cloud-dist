@@ -43,7 +43,9 @@
     <label>Password</label>
     <input id="loginPassword" type="password" />
     <button onclick="login()">Login</button>
+    <button onclick="logout()" style="margin-left: 8px;">Logout</button>
     <p>Token: <span id="tokenOutput">N/A</span></p>
+    <p>Status: <span id="loginStatus">Not logged in</span></p>
   </section>
 
   <section>
@@ -88,6 +90,54 @@
     <label>Parent Folder ID (0=root directory)</label>
     <input id="saveShareParentId" type="number" value="0" />
     <button onclick="saveShare()">Save to My Cloud Disk</button>
+  </section>
+
+  <section>
+    <h2>Friend System (Login Required)</h2>
+    <h3>Send Friend Request</h3>
+    <label>To User (Email or User Identity)</label>
+    <input id="friendRequestTo" type="text" placeholder="user@example.com or user-identity" />
+    <label>Message (Optional)</label>
+    <textarea id="friendRequestMessage" placeholder="Hello, let's be friends!"></textarea>
+    <button onclick="sendFriendRequest()">Send Friend Request</button>
+    
+    <h3 style="margin-top: 20px;">Friend Requests</h3>
+    <label>Type</label>
+    <select id="friendRequestType">
+      <option value="all">All</option>
+      <option value="sent">Sent</option>
+      <option value="received">Received</option>
+    </select>
+    <button onclick="loadFriendRequests()">Refresh Requests</button>
+    <div id="friendRequestList" style="margin-top: 10px;"></div>
+    
+    <h3 style="margin-top: 20px;">My Friends</h3>
+    <button onclick="loadFriends()">Refresh Friends</button>
+    <div id="friendList" style="margin-top: 10px;"></div>
+  </section>
+
+  <section>
+    <h2>Share File to Friend (Login Required)</h2>
+    <label>File Identity (Get from file list)</label>
+    <input id="friendShareFileIdentity" type="text" placeholder="user_repository_identity" />
+    <label>Friend User Identity (Get from friend list)</label>
+    <input id="friendShareToUser" type="text" placeholder="friend-user-identity" />
+    <label>Message (Optional)</label>
+    <textarea id="friendShareMessage" placeholder="Check out this file!"></textarea>
+    <button onclick="shareToFriend()">Share to Friend</button>
+    <div id="friendShareResult" style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 4px;"></div>
+  </section>
+
+  <section>
+    <h2>Friend Shares (Login Required)</h2>
+    <label>Type</label>
+    <select id="friendShareType">
+      <option value="all">All</option>
+      <option value="sent">Sent</option>
+      <option value="received">Received</option>
+    </select>
+    <button onclick="loadFriendShares()">Refresh Shares</button>
+    <div id="friendShareList" style="margin-top: 10px;"></div>
   </section>
 
   <section>
@@ -284,6 +334,7 @@
             localStorage.setItem("refreshToken", data.refreshToken);
           }
           document.getElementById("tokenOutput").textContent = token.slice(0, 24) + "...";
+          document.getElementById("loginStatus").textContent = "Logged in";
           log("Login successful! Token stored.");
           alert("Login successful!");
         } else {
@@ -292,6 +343,40 @@
       } catch (err) {
         alert("Login failed: " + err.message);
         log("Login error: " + err.message);
+      }
+    }
+
+    async function logout() {
+      if (!token) {
+        alert("You are not logged in");
+        return;
+      }
+      
+      try {
+        const result = await request("/user/logout", {
+          method: "POST",
+        });
+        
+        if (result && result.error) {
+          alert("Logout failed: " + result.error);
+          return;
+        }
+        
+        // Clear token and refresh token
+        token = "";
+        localStorage.removeItem("refreshToken");
+        document.getElementById("tokenOutput").textContent = "N/A";
+        document.getElementById("loginStatus").textContent = "Not logged in";
+        log("Logout successful! Token cleared.");
+        alert("Logout successful!");
+      } catch (err) {
+        // Even if server request fails, clear local token
+        token = "";
+        localStorage.removeItem("refreshToken");
+        document.getElementById("tokenOutput").textContent = "N/A";
+        document.getElementById("loginStatus").textContent = "Not logged in";
+        alert("Logout completed (local token cleared). Server error: " + err.message);
+        log("Logout error: " + err.message);
       }
     }
 
@@ -361,7 +446,7 @@
               <td>${file.ext || 'Folder'}</td>
               <td>${sizeMB} MB</td>
               <td>
-                <a href="${file.path}" target="_blank" style="margin-right: 8px;">Download</a>
+                <button onclick="downloadFile('${file.repository_identity || file.identity}')" style="padding: 4px 8px; cursor: pointer; margin-right: 8px;">Download</button>
                 <button onclick="shareFile('${file.identity}')" style="padding: 4px 8px; cursor: pointer;">Share</button>
               </td>
             </tr>`;
@@ -372,6 +457,68 @@
         }
       } catch (err) {
         alert("Failed to load file list: " + err.message);
+      }
+    }
+
+    async function downloadFile(repositoryIdentity) {
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+      if (!repositoryIdentity) {
+        alert("File identity is missing");
+        return;
+      }
+      
+      try {
+        log(`Downloading file: ${repositoryIdentity}`);
+        const url = `${apiBase}/file/download?identity=${repositoryIdentity}`;
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!res.ok) {
+          const text = await res.text();
+          let errorMsg = `Download failed: ${res.status} ${res.statusText}`;
+          try {
+            const error = JSON.parse(text);
+            errorMsg = error.error || errorMsg;
+          } catch (e) {
+            errorMsg = text || errorMsg;
+          }
+          alert(errorMsg);
+          log(`Download error: ${errorMsg}`);
+          return;
+        }
+        
+        // Get filename from Content-Disposition header or use default
+        const contentDisposition = res.headers.get('Content-Disposition');
+        let filename = 'download';
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename="?([^"]+)"?/);
+          if (match) {
+            filename = match[1];
+          }
+        }
+        
+        // Get file blob and create download link
+        const blob = await res.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(downloadUrl);
+        
+        log(`File downloaded successfully: ${filename}`);
+      } catch (err) {
+        alert("Download failed: " + err.message);
+        log(`Download error: ${err.message}`);
       }
     }
 
@@ -454,7 +601,7 @@
               <p><strong>File Name:</strong> ${result.name}</p>
               <p><strong>Type:</strong> ${result.ext || 'Unknown'}</p>
               <p><strong>Size:</strong> ${sizeMB} MB</p>
-              <p><strong>Download:</strong> <a href="${result.path}" target="_blank">Click to Download</a></p>
+              <p><strong>Download:</strong> <button onclick="downloadFile('${result.repository_identity}')" style="padding: 4px 8px; cursor: pointer;">Download File</button></p>
               <p><strong>Repository Identity:</strong> <code>${result.repository_identity}</code></p>
               <button onclick="document.getElementById('saveShareRepoIdentity').value='${result.repository_identity}'" style="margin-top: 8px;">
                 Copy to Save Box
@@ -504,6 +651,303 @@
       }).catch(err => {
         alert("Failed to copy link: " + err.message);
       });
+    }
+
+    // Friend System Functions
+    async function sendFriendRequest() {
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+      const toUser = document.getElementById("friendRequestTo").value.trim();
+      const message = document.getElementById("friendRequestMessage").value.trim();
+      
+      if (!toUser) {
+        alert("Please enter user email or identity");
+        return;
+      }
+      
+      try {
+        const result = await request("/friend/request/send", {
+          method: "POST",
+          body: JSON.stringify({
+            to_user_identity: toUser,
+            message: message
+          }),
+        });
+        
+        if (result && result.error) {
+          alert("Error: " + result.error);
+        } else if (result && result.identity) {
+          alert("Friend request sent successfully!");
+          document.getElementById("friendRequestTo").value = "";
+          document.getElementById("friendRequestMessage").value = "";
+          loadFriendRequests(); // Refresh list
+        } else {
+          alert("Unexpected response from server");
+        }
+      } catch (err) {
+        alert("Failed to send friend request: " + err.message);
+      }
+    }
+
+    async function loadFriendRequests() {
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+      
+      const type = document.getElementById("friendRequestType").value;
+      const listEl = document.getElementById("friendRequestList");
+      listEl.innerHTML = "<p>Loading...</p>";
+      
+      try {
+        const result = await request("/friend/request/list", {
+          method: "POST",
+          body: JSON.stringify({ type: type }),
+        });
+        
+        if (result && result.error) {
+          listEl.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
+          return;
+        }
+        
+        if (result && result.list) {
+          if (result.list.length === 0) {
+            listEl.innerHTML = "<p>No friend requests</p>";
+            return;
+          }
+          
+          let html = "<table border='1' cellpadding='8' style='width:100%; border-collapse: collapse;'>";
+          html += "<tr><th>From</th><th>To</th><th>Status</th><th>Message</th><th>Created</th><th>Action</th></tr>";
+          
+          result.list.forEach(req => {
+            const canRespond = req.status === "pending" && req.to_user_identity !== req.from_user_identity;
+            html += `<tr>
+              <td>${req.from_user_name || req.from_user_identity}</td>
+              <td>${req.to_user_name || req.to_user_identity}</td>
+              <td>${req.status}</td>
+              <td>${req.message || '-'}</td>
+              <td>${req.created_at || '-'}</td>
+              <td>
+                ${canRespond ? `
+                  <button onclick="respondFriendRequest('${req.identity}', 'accept')" style="padding: 4px 8px; margin-right: 4px;">Accept</button>
+                  <button onclick="respondFriendRequest('${req.identity}', 'reject')" style="padding: 4px 8px;">Reject</button>
+                ` : '-'}
+              </td>
+            </tr>`;
+          });
+          
+          html += "</table>";
+          listEl.innerHTML = html;
+        }
+      } catch (err) {
+        listEl.innerHTML = `<p style="color: red;">Error: ${err.message}</p>`;
+      }
+    }
+
+    async function respondFriendRequest(identity, action) {
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+      
+      try {
+        const result = await request("/friend/request/respond", {
+          method: "POST",
+          body: JSON.stringify({
+            identity: identity,
+            action: action
+          }),
+        });
+        
+        if (result && result.error) {
+          alert("Error: " + result.error);
+        } else {
+          alert(`Friend request ${action}ed successfully!`);
+          loadFriendRequests(); // Refresh list
+          loadFriends(); // Refresh friends list
+        }
+      } catch (err) {
+        alert("Failed to respond: " + err.message);
+      }
+    }
+
+    async function loadFriends() {
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+      
+      const listEl = document.getElementById("friendList");
+      listEl.innerHTML = "<p>Loading...</p>";
+      
+      try {
+        const result = await request("/friend/list", {
+          method: "POST",
+          body: JSON.stringify({}),
+        });
+        
+        if (result && result.error) {
+          listEl.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
+          return;
+        }
+        
+        if (result && result.list) {
+          if (result.list.length === 0) {
+            listEl.innerHTML = "<p>No friends yet</p>";
+            return;
+          }
+          
+          let html = "<table border='1' cellpadding='8' style='width:100%; border-collapse: collapse;'>";
+          html += "<tr><th>Name</th><th>Email</th><th>Status</th><th>Added</th><th>Action</th></tr>";
+          
+          result.list.forEach(friend => {
+            html += `<tr>
+              <td>${friend.user_name || friend.user_identity}</td>
+              <td>${friend.user_email || '-'}</td>
+              <td>${friend.status}</td>
+              <td>${friend.created_at || '-'}</td>
+              <td>
+                <button onclick="document.getElementById('friendShareToUser').value='${friend.user_identity}'" style="padding: 4px 8px;">
+                  Select for Share
+                </button>
+              </td>
+            </tr>`;
+          });
+          
+          html += "</table>";
+          listEl.innerHTML = html;
+        }
+      } catch (err) {
+        listEl.innerHTML = `<p style="color: red;">Error: ${err.message}</p>`;
+      }
+    }
+
+    async function shareToFriend() {
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+      
+      const fileIdentity = document.getElementById("friendShareFileIdentity").value.trim();
+      const toUser = document.getElementById("friendShareToUser").value.trim();
+      const message = document.getElementById("friendShareMessage").value.trim();
+      
+      if (!fileIdentity) {
+        alert("Please enter file identity");
+        return;
+      }
+      if (!toUser) {
+        alert("Please enter friend user identity");
+        return;
+      }
+      
+      const resultEl = document.getElementById("friendShareResult");
+      resultEl.innerHTML = "<p>Sharing...</p>";
+      
+      try {
+        const result = await request("/friend/share/create", {
+          method: "POST",
+          body: JSON.stringify({
+            to_user_identity: toUser,
+            user_repository_identity: fileIdentity,
+            message: message
+          }),
+        });
+        
+        if (result && result.error) {
+          resultEl.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
+          alert("Error: " + result.error);
+        } else if (result && result.identity) {
+          resultEl.innerHTML = `<p style="color: green;"><strong>File shared successfully!</strong></p>`;
+          document.getElementById("friendShareFileIdentity").value = "";
+          document.getElementById("friendShareMessage").value = "";
+          loadFriendShares(); // Refresh shares list
+        } else {
+          resultEl.innerHTML = `<p style="color: orange;">Unexpected response: ${JSON.stringify(result)}</p>`;
+        }
+      } catch (err) {
+        resultEl.innerHTML = `<p style="color: red;">Failed: ${err.message}</p>`;
+        alert("Failed to share: " + err.message);
+      }
+    }
+
+    async function loadFriendShares() {
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+      
+      const type = document.getElementById("friendShareType").value;
+      const listEl = document.getElementById("friendShareList");
+      listEl.innerHTML = "<p>Loading...</p>";
+      
+      try {
+        const result = await request("/friend/share/list", {
+          method: "POST",
+          body: JSON.stringify({ type: type }),
+        });
+        
+        if (result && result.error) {
+          listEl.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
+          return;
+        }
+        
+        if (result && result.list) {
+          if (result.list.length === 0) {
+            listEl.innerHTML = "<p>No shared files</p>";
+            return;
+          }
+          
+          let html = "<table border='1' cellpadding='8' style='width:100%; border-collapse: collapse;'>";
+          html += "<tr><th>From</th><th>To</th><th>File Name</th><th>Size</th><th>Message</th><th>Read</th><th>Created</th><th>Action</th></tr>";
+          
+          result.list.forEach(share => {
+            const sizeMB = (share.file_size / 1024 / 1024).toFixed(2);
+            html += `<tr>
+              <td>${share.from_user_name || share.from_user_identity}</td>
+              <td>${share.to_user_name || share.to_user_identity}</td>
+              <td>${share.file_name || 'Unknown'}${share.file_ext || ''}</td>
+              <td>${sizeMB} MB</td>
+              <td>${share.message || '-'}</td>
+              <td>${share.is_read ? 'Yes' : 'No'}</td>
+              <td>${share.created_at || '-'}</td>
+              <td>
+                <a href="${share.path}" target="_blank" style="margin-right: 8px;">Download</a>
+                ${!share.is_read ? `<button onclick="markShareRead('${share.identity}')" style="padding: 4px 8px;">Mark Read</button>` : ''}
+              </td>
+            </tr>`;
+          });
+          
+          html += "</table>";
+          listEl.innerHTML = html;
+        }
+      } catch (err) {
+        listEl.innerHTML = `<p style="color: red;">Error: ${err.message}</p>`;
+      }
+    }
+
+    async function markShareRead(identity) {
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+      
+      try {
+        const result = await request("/friend/share/mark-read", {
+          method: "POST",
+          body: JSON.stringify({ identity: identity }),
+        });
+        
+        if (result && result.error) {
+          alert("Error: " + result.error);
+        } else {
+          loadFriendShares(); // Refresh list
+        }
+      } catch (err) {
+        alert("Failed to mark as read: " + err.message);
+      }
     }
   </script>
 </body>

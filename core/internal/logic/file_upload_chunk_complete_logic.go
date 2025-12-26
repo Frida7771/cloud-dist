@@ -39,7 +39,7 @@ func (l *FileUploadChunkCompleteLogic) FileUploadChunkComplete(req *types.FileUp
 		Name:     req.Name,
 		Ext:      req.Ext,
 		Size:     req.Size,
-		Path:     helper.S3ObjectURL(req.Key),
+		Path:     req.Key, // Store S3 key for permanent download endpoint
 	}
 	if err = l.svcCtx.DB.WithContext(l.ctx).Create(rp).Error; err != nil {
 		return

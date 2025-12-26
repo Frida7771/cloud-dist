@@ -36,5 +36,15 @@ func (l *ShareBasicDetailLogic) ShareBasicDetail(req *types.ShareBasicDetailRequ
 		Joins("LEFT JOIN user_repository ON user_repository.identity = share_basic.user_repository_identity").
 		Where("share_basic.identity = ?", req.Identity).
 		Take(resp).Error
+	if err != nil {
+		return
+	}
+
+	// Convert repository identity to download endpoint URL
+	// This provides permanent download links that don't expire
+	if resp.RepositoryIdentity != "" {
+		resp.Path = "/file/download?identity=" + resp.RepositoryIdentity
+	}
+
 	return
 }
