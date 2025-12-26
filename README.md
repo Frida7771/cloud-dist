@@ -83,7 +83,7 @@ See [RUN.md](./RUN.md) for detailed setup instructions including database initia
 
 ![Profile & Storage](./screenshots/4.jpg)
 
-![Change Password & Friends](./screenshots/5.jpg)
+
 
 ## License
 
