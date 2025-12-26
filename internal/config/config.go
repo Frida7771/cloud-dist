@@ -12,6 +12,13 @@ type Config struct {
 	HTTP     HTTPSettings   `mapstructure:"HTTP"`
 	S3       S3Config       `mapstructure:"S3"`
 	SendGrid SendGridConfig `mapstructure:"SendGrid"`
+	JWT      JWTConfig      `mapstructure:"JWT"`
+	Stripe   StripeConfig   `mapstructure:"Stripe"`
+}
+
+// JWTConfig carries JWT configuration.
+type JWTConfig struct {
+	Key string `mapstructure:"Key"`
 }
 
 // MysqlConfig carries datasource info for the ORM layer.
@@ -53,4 +60,10 @@ type S3Config struct {
 type SendGridConfig struct {
 	APIKey    string `mapstructure:"APIKey"`
 	FromEmail string `mapstructure:"FromEmail"` // Optional sender email
+}
+
+// StripeConfig carries Stripe payment configuration.
+type StripeConfig struct {
+	SecretKey     string `mapstructure:"SecretKey"`
+	WebhookSecret string `mapstructure:"WebhookSecret"`
 }

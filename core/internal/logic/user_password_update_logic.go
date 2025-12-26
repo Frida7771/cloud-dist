@@ -47,9 +47,8 @@ func (l *UserPasswordUpdateLogic) UserPasswordUpdate(req *types.UserPasswordUpda
 		return nil, errors.New("verification code is incorrect")
 	}
 
-	// Verify old password
-	oldPasswordHash := helper.Md5(req.OldPassword)
-	if user.Password != oldPasswordHash {
+	// Verify old password using bcrypt
+	if !helper.CheckPasswordHash(req.OldPassword, user.Password) {
 		return nil, errors.New("old password is incorrect")
 	}
 
@@ -62,9 +61,14 @@ func (l *UserPasswordUpdateLogic) UserPasswordUpdate(req *types.UserPasswordUpda
 	}
 
 	// Check if new password is same as old password
-	newPasswordHash := helper.Md5(req.NewPassword)
-	if user.Password == newPasswordHash {
+	if helper.CheckPasswordHash(req.NewPassword, user.Password) {
 		return nil, errors.New("new password must be different from old password")
+	}
+
+	// Hash new password using bcrypt
+	newPasswordHash, err := helper.HashPassword(req.NewPassword)
+	if err != nil {
+		return nil, errors.New("failed to hash new password")
 	}
 
 	// Update password

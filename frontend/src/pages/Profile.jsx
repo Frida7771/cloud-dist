@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { friendService } from '../services/friendService'
 import { userService } from '../services/userService'
+import { storageService, STORAGE_PLANS } from '../services/storageService'
 import './Profile.css'
 
 // Password change form component
@@ -151,6 +152,7 @@ function PasswordChangeForm() {
 function Profile() {
   const { user, token } = useAuth()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState('info')
   const [friends, setFriends] = useState([])
   const [loading, setLoading] = useState(false)
@@ -159,6 +161,11 @@ function Profile() {
   // Add friend form
   const [newFriendEmail, setNewFriendEmail] = useState('')
   const [friendMessage, setFriendMessage] = useState('')
+
+  // Storage purchase
+  const [orders, setOrders] = useState([])
+  const [purchasing, setPurchasing] = useState(false)
+  const [orderFilter, setOrderFilter] = useState('')
 
   // Debug: log user data
   useEffect(() => {
@@ -184,10 +191,74 @@ function Profile() {
   }, [user, token])
 
   useEffect(() => {
+    // Check for payment result in URL
+    const payment = searchParams.get('payment')
+    
+    if (payment === 'success') {
+      // Payment successful, wait for webhook to update order status
+      alert('Payment successful! Processing your order...')
+      setSearchParams({}) // Clear URL params
+      
+      // Switch to storage tab to show orders
+      setActiveTab('storage')
+      
+      // Start polling for order status update (webhook will update it)
+      startOrderStatusPolling()
+    } else if (payment === 'cancel') {
+      alert('Payment was cancelled.')
+      setSearchParams({}) // Clear URL params
+    }
+  }, [searchParams, setSearchParams])
+
+  const startOrderStatusPolling = () => {
+    // Poll for order status updates (webhook will update the status)
+    let pollCount = 0
+    const maxPolls = 30 // Poll for up to 30 seconds (30 * 1 second)
+    
+    const pollInterval = setInterval(async () => {
+      pollCount++
+      
+      try {
+        // Reload orders to check for status update
+        const response = await storageService.getOrderList('')
+        const updatedOrders = response.data.list || []
+        setOrders(updatedOrders)
+        
+        // Check if any pending order became paid
+        const hasPaidOrder = updatedOrders.some(order => order.status === 'paid')
+        
+        if (hasPaidOrder || pollCount >= maxPolls) {
+          clearInterval(pollInterval)
+          
+          if (hasPaidOrder) {
+            // Order updated by webhook, refresh user data
+            alert('Order confirmed! Your storage capacity has been increased.')
+            // Refresh user data to show updated storage
+            window.location.reload()
+          } else if (pollCount >= maxPolls) {
+            // Timeout, show message
+            alert('Payment successful! Order is being processed. Please refresh the page in a moment.')
+          }
+        }
+      } catch (error) {
+        console.error('Failed to poll order status:', error)
+        if (pollCount >= maxPolls) {
+          clearInterval(pollInterval)
+        }
+      }
+    }, 1000) // Poll every 1 second
+    
+    // Cleanup on unmount
+    return () => clearInterval(pollInterval)
+  }
+
+  useEffect(() => {
     if (activeTab === 'friends') {
       loadFriends()
+    } else if (activeTab === 'storage') {
+      loadOrders()
     }
-  }, [activeTab])
+  }, [activeTab, orderFilter])
 
   const loadFriends = async () => {
     setLoading(true)
@@ -214,6 +285,35 @@ function Profile() {
       setFriendMessage('')
     } catch (error) {
       alert('Failed to send friend request: ' + (error.response?.data?.error || error.message))
+    }
+  }
+
+  const handlePurchaseStorage = async (storageBytes) => {
+    if (!confirm(`Are you sure you want to purchase this storage plan?`)) {
+      return
+    }
+
+    setPurchasing(true)
+    try {
+      const response = await storageService.createPurchaseSession(storageBytes)
+      // Redirect to Stripe Checkout
+      window.location.href = response.data.url
+    } catch (error) {
+      alert('Failed to create payment session: ' + (error.response?.data?.error || error.message))
+      setPurchasing(false)
+    }
+  }
+
+  const loadOrders = async () => {
+    setLoading(true)
+    try {
+      const response = await storageService.getOrderList(orderFilter)
+      setOrders(response.data.list || [])
+    } catch (error) {
+      console.error('Failed to load orders:', error)
+      setOrders([])
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -267,6 +367,12 @@ function Profile() {
           onClick={() => setActiveTab('friends')}
         >
           Friends
+        </button>
+        <button
+          className={activeTab === 'storage' ? 'active' : ''}
+          onClick={() => setActiveTab('storage')}
+        >
+          Buy Storage
         </button>
       </div>
 
@@ -360,6 +466,90 @@ function Profile() {
                 ))}
                 {friends.length === 0 && (
                   <div className="empty">No friends yet</div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'storage' && (
+        <div className="tab-content">
+          <div className="storage-purchase-section">
+            <h3>Purchase Storage</h3>
+            <p className="storage-description">
+              Choose a storage plan to increase your cloud storage capacity.
+            </p>
+            <div className="storage-plans">
+              {STORAGE_PLANS.map((plan) => (
+                <div key={plan.bytes} className="storage-plan-card">
+                  <div className="plan-header">
+                    <h4>{plan.name}</h4>
+                    <div className="plan-price">${plan.price}</div>
+                  </div>
+                  <div className="plan-details">
+                    <p>{formatBytes(plan.bytes)} of additional storage</p>
+                  </div>
+                  <button
+                    className="purchase-btn"
+                    onClick={() => handlePurchaseStorage(plan.bytes)}
+                    disabled={purchasing}
+                  >
+                    {purchasing ? 'Processing...' : 'Purchase'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="orders-section">
+            <h3>Order History</h3>
+            <div className="order-filters">
+              <button
+                className={orderFilter === '' ? 'active' : ''}
+                onClick={() => setOrderFilter('')}
+              >
+                All
+              </button>
+              <button
+                className={orderFilter === 'pending' ? 'active' : ''}
+                onClick={() => setOrderFilter('pending')}
+              >
+                Pending
+              </button>
+              <button
+                className={orderFilter === 'paid' ? 'active' : ''}
+                onClick={() => setOrderFilter('paid')}
+              >
+                Paid
+              </button>
+              <button
+                className={orderFilter === 'failed' ? 'active' : ''}
+                onClick={() => setOrderFilter('failed')}
+              >
+                Failed
+              </button>
+            </div>
+            {loading ? (
+              <div className="loading">Loading orders...</div>
+            ) : (
+              <div className="orders-list">
+                {orders.map((order) => (
+                  <div key={order.identity} className="order-item">
+                    <div className="order-info">
+                      <div className="order-header">
+                        <span className="order-storage">{formatBytes(order.storage_amount)}</span>
+                        <span className={`order-status ${order.status}`}>{order.status}</span>
+                      </div>
+                      <div className="order-details">
+                        <span>Price: ${(order.price_amount / 100).toFixed(2)} {order.currency.toUpperCase()}</span>
+                        <span>Date: {new Date(order.created_at).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {orders.length === 0 && (
+                  <div className="empty">No orders found</div>
                 )}
               </div>
             )}

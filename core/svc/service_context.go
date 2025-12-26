@@ -43,6 +43,15 @@ func NewServiceContext(c appcfg.Config) (*ServiceContext, error) {
 		c.SendGrid.FromEmail,
 	)
 
+	// Initialize JWT configuration from config file (environment variables take precedence)
+	define.InitJWTConfig(c.JWT.Key)
+
+	// Initialize Stripe configuration from config file (environment variables take precedence)
+	define.InitStripeConfig(
+		c.Stripe.SecretKey,
+		c.Stripe.WebhookSecret,
+	)
+
 	// Create auth middleware with Redis client for token blacklist
 	authMiddleware := middleware.NewAuthMiddleware()
 	authMiddleware.SetRedisClient(rdb)

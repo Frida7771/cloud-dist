@@ -58,6 +58,13 @@ func provideGinEngine(cfg cfg.Config, svcCtx *svc.ServiceContext) *gin.Engine {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	engine := gin.New()
+
+	// Add logging middleware to log all requests
+	engine.Use(func(c *gin.Context) {
+		log.Printf("[Gin] %s %s from %s", c.Request.Method, c.Request.URL.Path, c.ClientIP())
+		c.Next()
+	})
+
 	engine.Use(gin.Recovery())
 	// Expose test static assets under /test for quick manual verification.
 	engine.Static("/test", "./test")

@@ -28,13 +28,18 @@ func NewUserLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UserLog
 func (l *UserLoginLogic) UserLogin(req *types.LoginRequest) (resp *types.LoginReply, err error) {
 	user := new(models.UserBasic)
 	err = l.svcCtx.DB.WithContext(l.ctx).
-		Where("name = ? AND password = ?", req.Name, helper.Md5(req.Password)).
+		Where("name = ?", req.Name).
 		First(user).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errors.New("username or password is incorrect")
 	}
 	if err != nil {
 		return nil, err
+	}
+	
+	// Verify password using bcrypt
+	if !helper.CheckPasswordHash(req.Password, user.Password) {
+		return nil, errors.New("username or password is incorrect")
 	}
 
 	token, err := helper.GenerateToken(int(user.ID), user.Identity, user.Name, define.TokenExpire)

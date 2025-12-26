@@ -61,7 +61,7 @@ CREATE TABLE `user_basic` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `identity` varchar(36) DEFAULT NULL,
   `name` varchar(60) DEFAULT NULL,
-  `password` varchar(32) DEFAULT NULL,
+  `password` varchar(255) DEFAULT NULL COMMENT 'Bcrypt hashed password',
   `email` varchar(100) DEFAULT NULL,
   `now_volume` bigint(20) DEFAULT '0' COMMENT 'Currently used capacity (bytes)',
   `total_volume` bigint(20) DEFAULT '5368709120' COMMENT 'Total capacity (bytes), default 5GB',

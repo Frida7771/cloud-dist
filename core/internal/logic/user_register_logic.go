@@ -43,10 +43,14 @@ func (l *UserRegisterLogic) UserRegister(req *types.UserRegisterRequest) (resp *
 		return
 	}
 	// Save user data
+	hashedPassword, err := helper.HashPassword(req.Password)
+	if err != nil {
+		return nil, errors.New("failed to hash password")
+	}
 	user := &models.UserBasic{
 		Identity:    helper.UUID(),
 		Name:        req.Name,
-		Password:    helper.Md5(req.Password),
+		Password:    hashedPassword,
 		Email:       req.Email,
 		NowVolume:   0,          // Initial used volume is 0
 		TotalVolume: 5368709120, // Default total volume 5GB (5 * 1024 * 1024 * 1024)

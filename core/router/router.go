@@ -24,6 +24,10 @@ func Register(r *gin.Engine, serviceName string, svcCtx *svc.ServiceContext) {
 	r.POST("/user/register", handler.UserRegisterHandler(svcCtx))
 	r.GET("/share/basic/detail", handler.ShareBasicDetailHandler(svcCtx))
 
+	// Stripe webhook (public, no auth required - Stripe verifies via signature)
+	// Note: This route uses /api prefix to match Stripe CLI forwarding path
+	r.POST("/api/storage/purchase/webhook", handler.StoragePurchaseWebhookHandler(svcCtx))
+
 	auth := r.Group("/")
 	auth.Use(svcCtx.Auth)
 	{
@@ -54,5 +58,10 @@ func Register(r *gin.Engine, serviceName string, svcCtx *svc.ServiceContext) {
 		auth.POST("/friend/share/create", handler.FriendShareCreateHandler(svcCtx))
 		auth.POST("/friend/share/list", handler.FriendShareListHandler(svcCtx))
 		auth.POST("/friend/share/mark-read", handler.FriendShareMarkReadHandler(svcCtx))
+
+		// Storage purchase endpoints
+		auth.POST("/storage/purchase/create", handler.StoragePurchaseCreateHandler(svcCtx))
+		auth.POST("/storage/purchase/sync", handler.StoragePurchaseSyncHandler(svcCtx))
+		auth.POST("/storage/order/list", handler.StorageOrderListHandler(svcCtx))
 	}
 }

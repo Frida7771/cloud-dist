@@ -322,3 +322,43 @@ type FriendShareMarkReadRequest struct {
 
 type FriendShareMarkReadReply struct {
 }
+
+// Storage Purchase Types
+type StoragePurchaseCreateRequest struct {
+	StorageAmount int64  `json:"storage_amount"`    // Storage capacity in bytes (e.g., 10737418240 for 10GB)
+	Currency      string `json:"currency,optional"` // Currency code, default: usd
+}
+
+type StoragePurchaseCreateReply struct {
+	SessionID string `json:"session_id"` // Stripe Checkout Session ID
+	URL       string `json:"url"`        // Stripe Checkout URL
+}
+
+type StorageOrderListRequest struct {
+	Status string `json:"status,optional"` // Filter by status: pending, paid, failed, refunded, or empty for all
+}
+
+type StorageOrderListReply struct {
+	List []*StorageOrderItem `json:"list"`
+}
+
+type StorageOrderItem struct {
+	Identity      string `json:"identity"`
+	StorageAmount int64  `json:"storage_amount"` // Bytes
+	PriceAmount   int64  `json:"price_amount"`   // Cents
+	Currency      string `json:"currency"`
+	Status        string `json:"status"`
+	CreatedAt     string `json:"created_at"`
+	UpdatedAt     string `json:"updated_at"`
+}
+
+// Sync order status from Stripe
+type StoragePurchaseSyncRequest struct {
+	SessionID string `json:"session_id"` // Stripe Checkout Session ID
+}
+
+type StoragePurchaseSyncReply struct {
+	Status        string `json:"status"`         // Order status: paid, pending, failed
+	StorageAmount int64  `json:"storage_amount"` // Storage capacity added
+	Message       string `json:"message"`
+}
