@@ -55,36 +55,22 @@ See [RUN.md](./RUN.md) for detailed setup instructions including database initia
 
 ## Features
 
-- **User Management**: Registration, login, logout with JWT authentication
-- **File Storage**: Upload, download, organize files with S3 backend
-- **File Management**: Create folders, rename, move, delete files
-- **Sharing**: Public file sharing with expiration
-- **Friend System**: Add friends, send friend requests, share files with friends
-- **Token Management**: JWT-based auth with refresh tokens and blacklist support
+- User authentication with JWT
+- File upload/download with S3 storage
+- File management (folders, rename, move, delete)
+- File sharing and friend system
+- Storage purchase with Stripe payment
 
+## Tech Stack
 
-## Architecture
-
-- **Framework**: Gin web framework
-- **ORM**: GORM
-- **Storage**: AWS S3
-- **Cache**: Redis (for verification codes and token blacklist)
-- **Auth**: JWT tokens with Redis blacklist
+- Backend: Go, Gin, GORM
+- Storage: AWS S3
+- Cache: Redis
+- Payment: Stripe
 
 ## Screenshots
 
-### Web UI
-
-![Login](./screenshots/1.jpg)
-
-![Main Files View](./screenshots/2.jpg)
-
-![Share Files](./screenshots/3.jpg)
-
-![Profile & Storage](./screenshots/4.jpg)
-
-![Change Password & Friends](./screenshots/5.jpg)
-![Payment](./screenshots/6.jpg)
+![Login](./screenshots/1.jpg) ![Files](./screenshots/2.jpg) ![Share](./screenshots/3.jpg) ![Settings](./screenshots/5.jpg) ![Payment](./screenshots/6.jpg)
 
 ## License
 
