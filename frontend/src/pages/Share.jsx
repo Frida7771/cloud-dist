@@ -6,7 +6,6 @@ import './Share.css'
 function Share() {
   const [friends, setFriends] = useState([])
   const [sharedFiles, setSharedFiles] = useState([])
-  const [requests, setRequests] = useState([])
   const [activeTab, setActiveTab] = useState('share')
   const [loading, setLoading] = useState(false)
   
@@ -24,8 +23,6 @@ function Share() {
       loadSharedFiles('received')
     } else if (activeTab === 'sent') {
       loadSharedFiles('sent')
-    } else if (activeTab === 'requests') {
-      loadRequests()
     }
   }, [activeTab])
 
@@ -85,18 +82,6 @@ function Share() {
     }
   }
 
-  const loadRequests = async () => {
-    setLoading(true)
-    try {
-      const response = await friendService.getFriendRequests('received')
-      setRequests(response.data.list || [])
-    } catch (error) {
-      console.error('Failed to load requests:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleShareFile = async () => {
     if (!selectedFile || !selectedFriend) {
       alert('Please select a file and a friend')
@@ -112,16 +97,6 @@ function Share() {
       loadSharedFiles('sent')
     } catch (error) {
       alert('Failed to share file: ' + (error.response?.data?.error || error.message))
-    }
-  }
-
-  const handleRespondRequest = async (identity, action) => {
-    try {
-      await friendService.respondFriendRequest(identity, action)
-      loadRequests()
-      loadFriends()
-    } catch (error) {
-      alert('Failed to respond to request')
     }
   }
 
@@ -151,12 +126,6 @@ function Share() {
           onClick={() => setActiveTab('sent')}
         >
           Sent
-        </button>
-        <button
-          className={activeTab === 'requests' ? 'active' : ''}
-          onClick={() => setActiveTab('requests')}
-        >
-          Friend Requests
         </button>
       </div>
 
@@ -258,46 +227,6 @@ function Share() {
               ))}
               {sharedFiles.length === 0 && (
                 <div className="empty">No files shared yet</div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'requests' && (
-        <div className="tab-content">
-          {loading ? (
-            <div className="loading">Loading...</div>
-          ) : (
-            <div className="requests-list">
-              {requests
-                .filter((r) => r.status === 'pending')
-                .map((request) => (
-                  <div key={request.identity} className="request-item">
-                    <div>
-                      <strong>{request.from_user_name}</strong>
-                      <p>{request.message || 'No message'}</p>
-                    </div>
-                    <div className="request-actions">
-                      <button
-                        onClick={() =>
-                          handleRespondRequest(request.identity, 'accept')
-                        }
-                      >
-                        Accept
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleRespondRequest(request.identity, 'reject')
-                        }
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              {requests.filter((r) => r.status === 'pending').length === 0 && (
-                <div className="empty">No pending requests</div>
               )}
             </div>
           )}

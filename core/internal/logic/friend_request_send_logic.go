@@ -26,20 +26,20 @@ func NewFriendRequestSendLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 }
 
 func (l *FriendRequestSendLogic) FriendRequestSend(req *types.FriendRequestSendRequest, fromUserIdentity string) (resp *types.FriendRequestSendReply, err error) {
-	// Find target user by email or identity
+	// Find target user by email or username
 	var toUser models.UserBasic
 	toUserIdentity := strings.TrimSpace(req.ToUserIdentity)
 
-	// Check if it's an email or user identity
+	// Check if it's an email or username
 	if strings.Contains(toUserIdentity, "@") {
 		// It's an email
 		err = l.svcCtx.DB.WithContext(l.ctx).
 			Where("email = ?", toUserIdentity).
 			First(&toUser).Error
 	} else {
-		// It's a user identity
+		// It's a username
 		err = l.svcCtx.DB.WithContext(l.ctx).
-			Where("identity = ?", toUserIdentity).
+			Where("name = ?", toUserIdentity).
 			First(&toUser).Error
 	}
 

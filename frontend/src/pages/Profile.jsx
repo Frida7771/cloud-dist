@@ -161,6 +161,9 @@ function Profile() {
   // Add friend form
   const [newFriendEmail, setNewFriendEmail] = useState('')
   const [friendMessage, setFriendMessage] = useState('')
+  
+  // Friend requests
+  const [requests, setRequests] = useState([])
 
   // Storage purchase
   const [orders, setOrders] = useState([])
@@ -269,6 +272,7 @@ function Profile() {
   useEffect(() => {
     if (activeTab === 'friends') {
       loadFriends()
+      loadRequests()
     } else if (activeTab === 'storage') {
       loadOrders()
     }
@@ -286,9 +290,28 @@ function Profile() {
     }
   }
 
+  const loadRequests = async () => {
+    try {
+      const response = await friendService.getFriendRequests('received')
+      setRequests(response.data.list || [])
+    } catch (error) {
+      console.error('Failed to load requests:', error)
+    }
+  }
+
+  const handleRespondRequest = async (identity, action) => {
+    try {
+      await friendService.respondFriendRequest(identity, action)
+      loadRequests()
+      loadFriends()
+    } catch (error) {
+      alert('Failed to respond to request')
+    }
+  }
+
   const handleSendFriendRequest = async () => {
     if (!newFriendEmail) {
-      alert('Please enter email or user ID')
+      alert('Please enter email or username')
       return
     }
 
@@ -439,7 +462,7 @@ function Profile() {
             <div className="add-friend-form">
               <input
                 type="text"
-                placeholder="Enter email or user ID"
+                placeholder="Enter email or username"
                 value={newFriendEmail}
                 onChange={(e) => setNewFriendEmail(e.target.value)}
               />
@@ -474,6 +497,41 @@ function Profile() {
                 )}
               </div>
             )}
+          </div>
+
+          <div className="friend-requests-section" style={{ marginTop: '2rem' }}>
+            <h3>Friend Requests</h3>
+            <div className="requests-list">
+              {requests
+                .filter((r) => r.status === 'pending')
+                .map((request) => (
+                  <div key={request.identity} className="request-item">
+                    <div>
+                      <strong>{request.from_user_name}</strong>
+                      <p>{request.message || 'No message'}</p>
+                    </div>
+                    <div className="request-actions">
+                      <button
+                        onClick={() =>
+                          handleRespondRequest(request.identity, 'accept')
+                        }
+                      >
+                        Accept
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleRespondRequest(request.identity, 'reject')
+                        }
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              {requests.filter((r) => r.status === 'pending').length === 0 && (
+                <div className="empty">No pending requests</div>
+              )}
+            </div>
           </div>
         </div>
       )}
