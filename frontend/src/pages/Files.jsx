@@ -287,7 +287,7 @@ function Files() {
               {selectedFile && (
                 <div className="file-info">
                   <span>Selected: {selectedFile.name}</span>
-                  <span>Size: {(selectedFile.size / 1024).toFixed(2)} KB</span>
+                  <span>Size: {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</span>
                 </div>
               )}
             </div>
@@ -434,7 +434,7 @@ function Files() {
                       {/* Only show size for files, not folders */}
                       {file.ext !== '' && file.size && file.size > 0 && (
                         <span className="file-size">
-                          {(file.size / 1024).toFixed(2)} KB
+                          {(file.size / (1024 * 1024)).toFixed(2)} MB
                         </span>
                       )}
                     </>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { friendService } from '../services/friendService'
@@ -166,6 +166,9 @@ function Profile() {
   const [orders, setOrders] = useState([])
   const [purchasing, setPurchasing] = useState(false)
   const [orderFilter, setOrderFilter] = useState('')
+  
+  // Use ref to track if payment result has been processed to prevent duplicate alerts
+  const paymentProcessedRef = useRef(false)
 
   // Debug: log user data
   useEffect(() => {
@@ -194,7 +197,15 @@ function Profile() {
     // Check for payment result in URL
     const payment = searchParams.get('payment')
     
+    // Skip if already processed
+    if (paymentProcessedRef.current) {
+      return
+    }
+    
     if (payment === 'success') {
+      // Mark as processed to prevent duplicate alerts
+      paymentProcessedRef.current = true
+      
       // Payment successful, wait for webhook to update order status
       alert('Payment successful! Processing your order...')
       setSearchParams({}) // Clear URL params
@@ -205,6 +216,9 @@ function Profile() {
       // Start polling for order status update (webhook will update it)
       startOrderStatusPolling()
     } else if (payment === 'cancel') {
+      // Mark as processed
+      paymentProcessedRef.current = true
+      
       alert('Payment was cancelled.')
       setSearchParams({}) // Clear URL params
     }
@@ -407,15 +421,6 @@ function Profile() {
                   </span>
                 </div>
               </div>
-              {/* Debug info - remove in production */}
-              {process.env.NODE_ENV === 'development' && (
-                <div className="info-item" style={{ fontSize: '0.8rem', color: '#999', marginTop: '1rem', padding: '1rem', background: '#f5f5f5', borderRadius: '4px' }}>
-                  <label>Debug Info:</label>
-                  <pre style={{ fontSize: '0.7rem', overflow: 'auto', marginTop: '0.5rem' }}>
-                    {JSON.stringify(user, null, 2)}
-                  </pre>
-                </div>
-              )}
             </div>
           )}
         </div>

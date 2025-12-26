@@ -4,6 +4,7 @@ import api from '../services/api'
 const AuthContext = createContext()
 
 export function AuthProvider({ children }) {
+  // Load token from localStorage on initialization
   const [token, setToken] = useState(localStorage.getItem('token') || '')
   const [user, setUser] = useState(null)
   const [isInitialized, setIsInitialized] = useState(false)
@@ -142,7 +143,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ token, user, login, register, sendVerificationCode, logout }}>
+    <AuthContext.Provider value={{ token, user, isInitialized, login, register, sendVerificationCode, logout }}>
       {children}
     </AuthContext.Provider>
   )

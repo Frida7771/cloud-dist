@@ -8,15 +8,20 @@ import Profile from './pages/Profile'
 import Layout from './components/Layout'
 
 function PrivateRoute({ children }) {
-  const { token } = useAuth()
+  const { token, isInitialized } = useAuth()
   
-  // Check token from context (more reliable than localStorage check)
-  // Only redirect if token is explicitly empty (not just undefined during initialization)
-  if (token === '' || (token === null && !localStorage.getItem('token'))) {
+  // Wait for initialization to complete before checking token
+  // This prevents redirecting to login during initial token load
+  if (!isInitialized) {
+    return null // or a loading spinner
+  }
+  
+  // Redirect to login if no token after initialization
+  if (!token || token === '') {
     return <Navigate to="/login" replace />
   }
   
-  // If token exists or is being initialized, show children
+  // If token exists, show protected content
   return children
 }
 
@@ -34,11 +39,13 @@ function App() {
             </PrivateRoute>
           }
         >
-          <Route index element={<Files />} />
+          <Route index element={<Navigate to="/files" replace />} />
           <Route path="files" element={<Files />} />
           <Route path="share" element={<Share />} />
           <Route path="profile" element={<Profile />} />
         </Route>
+        {/* Default route: redirect to login if not authenticated */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </AuthProvider>
   )

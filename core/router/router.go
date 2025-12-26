@@ -61,7 +61,6 @@ func Register(r *gin.Engine, serviceName string, svcCtx *svc.ServiceContext) {
 
 		// Storage purchase endpoints
 		auth.POST("/storage/purchase/create", handler.StoragePurchaseCreateHandler(svcCtx))
-		auth.POST("/storage/purchase/sync", handler.StoragePurchaseSyncHandler(svcCtx))
 		auth.POST("/storage/order/list", handler.StorageOrderListHandler(svcCtx))
 	}
 }
