@@ -1,13 +1,13 @@
 # CloudDist
 
-A lightweight cloud storage backend built with Go, Gin, and GORM.
+A lightweight cloud storage built with Go, Gin, and GORM.
 
 ## Prerequisites
 
 - Go 1.23+
 - MySQL
 - Redis
-- AWS S3 (or S3-compatible storage like MinIO)
+- AWS S3
 - Node.js 18+ (for frontend)
 
 ## Quick Start
@@ -49,9 +49,6 @@ A lightweight cloud storage backend built with Go, Gin, and GORM.
 
 Visit `http://localhost:3000` to use the application.
 
-## Full Setup Guide
-
-See [RUN.md](./RUN.md) for detailed setup instructions including database initialization, Redis setup, and troubleshooting.
 
 ## Features
 
@@ -64,6 +61,7 @@ See [RUN.md](./RUN.md) for detailed setup instructions including database initia
 ## Tech Stack
 
 - Backend: Go, Gin, GORM
+- Frontend: React, JavaScript
 - Storage: AWS S3
 - Cache: Redis
 - Payment: Stripe
