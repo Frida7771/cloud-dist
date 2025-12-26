@@ -51,6 +51,18 @@ func InitS3Config(accessKeyID, secretAccessKey, bucket, region, endpoint string)
 	}
 }
 
+// InitSendGridConfig initializes SendGrid configuration from config struct.
+// Environment variables take precedence over config file values.
+func InitSendGridConfig(apiKey, fromEmail string) {
+	// Only set if not already set by environment variable
+	if SendGridAPIKey == "" && apiKey != "" {
+		SendGridAPIKey = apiKey
+	}
+	if SendGridFromEmail == "" && fromEmail != "" {
+		SendGridFromEmail = fromEmail
+	}
+}
+
 // PageSize default pagination parameter
 var PageSize = 20
 

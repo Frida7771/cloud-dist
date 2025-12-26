@@ -46,6 +46,15 @@ type RefreshAuthorizationReply struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
+type UserPasswordUpdateRequest struct {
+	OldPassword string `json:"old_password"`
+	NewPassword string `json:"new_password"`
+	Code        string `json:"code"` // Email verification code
+}
+
+type UserPasswordUpdateReply struct {
+}
+
 type ShareBasicSaveRequest struct {
 	RepositoryIdentity string `json:"repository_identity"`
 	ParentId           int64  `json:"parent_id"`
@@ -191,8 +200,10 @@ type UserDetailRequest struct {
 }
 
 type UserDetailReply struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	Name        string `json:"name"`
+	Email       string `json:"email"`
+	NowVolume   int64  `json:"now_volume"`
+	TotalVolume int64  `json:"total_volume"`
 }
 
 type MailCodeSendRequest struct {
@@ -200,6 +211,13 @@ type MailCodeSendRequest struct {
 }
 
 type MailCodeSendReply struct {
+}
+
+type MailCodeSendPasswordUpdateRequest struct {
+	Email string `json:"email"`
+}
+
+type MailCodeSendPasswordUpdateReply struct {
 }
 
 type UserLogoutRequest struct {

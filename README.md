@@ -8,42 +8,50 @@ A lightweight cloud storage backend built with Go, Gin, and GORM.
 - MySQL
 - Redis
 - AWS S3 (or S3-compatible storage like MinIO)
+- Node.js 18+ (for frontend)
 
 ## Quick Start
 
-### 1. Install Dependencies
+### Backend
 
-```bash
-go mod tidy
-```
+1. **Setup Database**
+   ```bash
+   mysql -u root -p < setup_db.sql
+   ```
 
-### 2. Setup Database
+2. **Configure**
+   Edit `configs/config.yaml` or set environment variables:
+   ```bash
+   export AWSAccessKeyID=your-access-key
+   export AWSSecretAccessKey=your-secret-key
+   export S3Bucket=your-bucket-name
+   export AWSRegion=us-east-1
+   ```
 
-```bash
-mysql -u root -p < setup_db.sql
-```
+3. **Run Backend**
+   ```bash
+   go mod tidy
+   go run ./cmd/cloud-dist/main.go -config configs/config.yaml
+   ```
 
-### 3. Configure
+### Frontend
 
-Edit `configs/config.yaml` with your MySQL and Redis connection details.
+1. **Install Dependencies**
+   ```bash
+   cd frontend
+   npm install
+   ```
 
-### 4. Set Environment Variables (Optional)
+2. **Run Frontend**
+   ```bash
+   npm run dev
+   ```
 
-```bash
-export AWSAccessKeyID=your-access-key
-export AWSSecretAccessKey=your-secret-key
-export S3Bucket=your-bucket-name
-export AWSRegion=us-east-1
-export SendGridAPIKey=your-sendgrid-key  # For email verification
-```
+Visit `http://localhost:3000` to use the application.
 
-### 5. Run
+## Full Setup Guide
 
-```bash
-go run ./cmd/cloud-dist/main.go -config configs/config.yaml
-```
-
-Service runs on `http://0.0.0.0:8888`
+See [RUN.md](./RUN.md) for detailed setup instructions including database initialization, Redis setup, and troubleshooting.
 
 ## Features
 
@@ -62,6 +70,20 @@ Service runs on `http://0.0.0.0:8888`
 - **Storage**: AWS S3
 - **Cache**: Redis (for verification codes and token blacklist)
 - **Auth**: JWT tokens with Redis blacklist
+
+## Screenshots
+
+### Web UI
+
+![Login](./screenshots/1.jpg)
+
+![Main Files View](./screenshots/2.jpg)
+
+![Share Files](./screenshots/3.jpg)
+
+![Profile & Storage](./screenshots/4.jpg)
+
+![Change Password & Friends](./screenshots/5.jpg)
 
 ## License
 

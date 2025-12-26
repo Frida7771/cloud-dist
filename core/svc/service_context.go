@@ -37,10 +37,16 @@ func NewServiceContext(c appcfg.Config) (*ServiceContext, error) {
 		c.S3.Endpoint,
 	)
 
+	// Initialize SendGrid configuration from config file (environment variables take precedence)
+	define.InitSendGridConfig(
+		c.SendGrid.APIKey,
+		c.SendGrid.FromEmail,
+	)
+
 	// Create auth middleware with Redis client for token blacklist
 	authMiddleware := middleware.NewAuthMiddleware()
 	authMiddleware.SetRedisClient(rdb)
-	
+
 	return &ServiceContext{
 		Config: c,
 		DB:     db,

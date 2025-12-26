@@ -50,8 +50,16 @@ func (m *AuthMiddleware) Handle(c *gin.Context) {
 		return
 	}
 
+	// Verify token contains required fields
+	if uc.Identity == "" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token: user identity is empty"})
+		return
+	}
+
+	// Set user information in context
 	c.Set("UserId", uc.Id)
 	c.Set("UserIdentity", uc.Identity)
 	c.Set("UserName", uc.Name)
+	
 	c.Next()
 }

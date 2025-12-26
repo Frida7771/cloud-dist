@@ -35,5 +35,7 @@ func (l *UserDetailLogic) UserDetail(req *types.UserDetailRequest) (resp *types.
 	}
 	resp.Name = ub.Name
 	resp.Email = ub.Email
+	resp.NowVolume = ub.NowVolume
+	resp.TotalVolume = ub.TotalVolume
 	return
 }

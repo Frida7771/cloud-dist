@@ -100,23 +100,9 @@ func FileUploadHandler(svcCtx *svc.ServiceContext) gin.HandlerFunc {
 		}
 		log.Printf("[FileUpload] File upload completed: identity=%s", resp.Identity)
 
-		// Automatically save to user repository and update capacity
-		log.Printf("[FileUpload] Automatically saving to user repository")
-		saveReq := types.UserRepositorySaveRequest{
-			ParentId:           0, // Root directory
-			RepositoryIdentity: resp.Identity,
-			Ext:                resp.Ext,
-			Name:               resp.Name,
-		}
-		saveLogic := logic.NewUserRepositorySaveLogic(c.Request.Context(), svcCtx)
-		_, err = saveLogic.UserRepositorySave(&saveReq, userIdentity)
-		if err != nil {
-			log.Printf("[FileUpload] Failed to save to user repository: %v", err)
-			// Even if saving to user repository fails, return upload success (file is already in central storage pool)
-			// User can manually save later
-		} else {
-			log.Printf("[FileUpload] Saved to user repository, capacity updated")
-		}
+		// Don't automatically save to user repository
+		// Frontend will call /user/repository/save with the selected folder
+		// This allows users to choose which folder to save the file to
 
 		c.JSON(http.StatusOK, resp)
 	}

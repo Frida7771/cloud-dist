@@ -20,7 +20,6 @@ func Register(r *gin.Engine, serviceName string, svcCtx *svc.ServiceContext) {
 
 	r.POST("/user/login", handler.UserLoginHandler(svcCtx))
 	r.POST("/user/logout", handler.UserLogoutHandler(svcCtx))
-	r.POST("/user/detail", handler.UserDetailHandler(svcCtx))
 	r.POST("/mail/code/send/register", handler.MailCodeSendRegisterHandler(svcCtx))
 	r.POST("/user/register", handler.UserRegisterHandler(svcCtx))
 	r.GET("/share/basic/detail", handler.ShareBasicDetailHandler(svcCtx))
@@ -28,6 +27,9 @@ func Register(r *gin.Engine, serviceName string, svcCtx *svc.ServiceContext) {
 	auth := r.Group("/")
 	auth.Use(svcCtx.Auth)
 	{
+		auth.POST("/user/detail", handler.UserDetailHandler(svcCtx))
+		auth.POST("/mail/code/send/password-update", handler.MailCodeSendPasswordUpdateHandler(svcCtx))
+		auth.POST("/user/password/update", handler.UserPasswordUpdateHandler(svcCtx))
 		auth.POST("/file/upload", handler.FileUploadHandler(svcCtx))
 		auth.GET("/file/download", handler.FileDownloadHandler(svcCtx))
 		auth.POST("/user/repository/save", handler.UserRepositorySaveHandler(svcCtx))
@@ -43,7 +45,7 @@ func Register(r *gin.Engine, serviceName string, svcCtx *svc.ServiceContext) {
 		auth.POST("/file/upload/prepare", handler.FileUploadPrepareHandler(svcCtx))
 		auth.POST("/file/upload/chunk", handler.FileUploadChunkHandler(svcCtx))
 		auth.POST("/file/upload/chunk/complete", handler.FileUploadChunkCompleteHandler(svcCtx))
-		
+
 		// Friend system endpoints
 		auth.POST("/friend/request/send", handler.FriendRequestSendHandler(svcCtx))
 		auth.POST("/friend/request/list", handler.FriendRequestListHandler(svcCtx))

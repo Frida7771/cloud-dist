@@ -2,15 +2,16 @@ package config
 
 // Config defines runtime settings for the Gin application.
 type Config struct {
-	Name     string       `mapstructure:"Name"`
-	Host     string       `mapstructure:"Host"`
-	Port     int          `mapstructure:"Port"`
-	MaxBytes int64        `mapstructure:"MaxBytes"`
-	Mysql    MysqlConfig  `mapstructure:"Mysql"`
-	Redis    RedisConfig  `mapstructure:"Redis"`
-	Log      LogConfig    `mapstructure:"Log"`
-	HTTP     HTTPSettings `mapstructure:"HTTP"`
-	S3       S3Config     `mapstructure:"S3"`
+	Name     string         `mapstructure:"Name"`
+	Host     string         `mapstructure:"Host"`
+	Port     int            `mapstructure:"Port"`
+	MaxBytes int64          `mapstructure:"MaxBytes"`
+	Mysql    MysqlConfig    `mapstructure:"Mysql"`
+	Redis    RedisConfig    `mapstructure:"Redis"`
+	Log      LogConfig      `mapstructure:"Log"`
+	HTTP     HTTPSettings   `mapstructure:"HTTP"`
+	S3       S3Config       `mapstructure:"S3"`
+	SendGrid SendGridConfig `mapstructure:"SendGrid"`
 }
 
 // MysqlConfig carries datasource info for the ORM layer.
@@ -46,4 +47,10 @@ type S3Config struct {
 	Bucket          string `mapstructure:"Bucket"`
 	Region          string `mapstructure:"Region"`
 	Endpoint        string `mapstructure:"Endpoint"` // Optional custom endpoint
+}
+
+// SendGridConfig carries SendGrid email configuration.
+type SendGridConfig struct {
+	APIKey    string `mapstructure:"APIKey"`
+	FromEmail string `mapstructure:"FromEmail"` // Optional sender email
 }
