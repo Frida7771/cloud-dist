@@ -12,14 +12,23 @@ A lightweight cloud storage built with Go, Gin, and GORM.
 
 ## Quick Start
 
-### Backend
+### One-Click Startup (Recommended)
 
 1. **Setup Database**
    ```bash
    mysql -u root -p < setup_db.sql
    ```
 
-2. **Configure**
+2. **Install Dependencies**
+   ```bash
+   # Backend dependencies
+   go mod tidy
+   
+   # Frontend dependencies
+   cd frontend && npm install && cd ..
+   ```
+
+3. **Configure**
    Edit `configs/config.yaml` or set environment variables:
    ```bash
    export AWSAccessKeyID=your-access-key
@@ -28,24 +37,42 @@ A lightweight cloud storage built with Go, Gin, and GORM.
    export AWSRegion=us-east-1
    ```
 
-3. **Run Backend**
+4. **Start All Services**
    ```bash
-   go mod tidy
-   go run ./cmd/cloud-dist/main.go -config configs/config.yaml
+   ./start.sh
    ```
+   
+   This will start:
+   - Backend server (http://localhost:8888)
+   - Frontend dev server (http://localhost:3000)
+   - Stripe CLI webhook listener
 
-### Frontend
-
-1. **Install Dependencies**
+5. **Stop All Services**
    ```bash
-   cd frontend
-   npm install
+   ./stop.sh
    ```
+   
+   Or press `Ctrl+C` in the terminal where `start.sh` is running.
 
-2. **Run Frontend**
-   ```bash
-   npm run dev
-   ```
+### Manual Startup (Alternative)
+
+If you prefer to start services separately:
+
+**Backend:**
+```bash
+go run ./cmd/cloud-dist/main.go -config configs/config.yaml
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm run dev
+```
+
+**Stripe CLI (for webhook testing):**
+```bash
+stripe listen --forward-to localhost:8888/api/storage/purchase/webhook
+```
 
 Visit `http://localhost:3000` to use the application.
 

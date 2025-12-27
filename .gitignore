@@ -26,3 +26,5 @@ configs/config.example.yaml
 .mp4
 .yaml
 .yml
+.pid
+.log
