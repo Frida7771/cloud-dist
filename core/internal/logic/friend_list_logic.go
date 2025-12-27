@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"cloud-disk/core/define"
-	"cloud-disk/core/internal/svc"
+	"cloud-disk/core/svc"
 	"cloud-disk/core/internal/types"
 )
 

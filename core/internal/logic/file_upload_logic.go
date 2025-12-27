@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"cloud-disk/core/helper"
-	"cloud-disk/core/internal/svc"
+	"cloud-disk/core/svc"
 	"cloud-disk/core/internal/types"
 	"cloud-disk/core/models"
 )

@@ -4,3 +4,4 @@
 ALTER TABLE `repository_pool` 
 MODIFY COLUMN `hash` varchar(16) DEFAULT NULL COMMENT 'Unique identifier of the file (xxHash64 hash)';
 
+

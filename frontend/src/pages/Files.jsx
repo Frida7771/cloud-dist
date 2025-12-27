@@ -276,12 +276,16 @@ function Files() {
             onClick={() => setShowUploadModal(true)}
             className="action-btn upload-btn"
           >
-            Upload File
+            <span>📤</span> Upload File
           </button>
           <button
             onClick={() => setShowCreateFolder(true)}
             className="action-btn create-folder-btn"
           >
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ width: '18px', height: '18px', fill: 'white' }}>
+              <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
+              <path d="M10 4v4h8v-2c0-1.11-.89-2-2-2h-6l-2-2z" opacity="0.8"/>
+            </svg>
             Create Folder
           </button>
         </div>
@@ -296,7 +300,7 @@ function Files() {
           }
         }}>
           <div className="modal-content upload-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Upload File</h3>
+            <h3>📤 Upload File</h3>
             
             <div className="form-group">
               <label>Select File</label>
@@ -371,10 +375,16 @@ function Files() {
       {showCreateFolder && (
         <div className="modal-overlay" onClick={() => setShowCreateFolder(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Create Folder</h3>
+            <h3>
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ width: '24px', height: '24px', fill: '#d4a574', display: 'inline-block', verticalAlign: 'middle', marginRight: '8px' }}>
+                <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
+                <path d="M10 4v4h8v-2c0-1.11-.89-2-2-2h-6l-2-2z" opacity="0.8"/>
+              </svg>
+              Create Folder
+            </h3>
             <input
               type="text"
-              placeholder="Folder name"
+              placeholder="Enter folder name"
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
               onKeyPress={(e) => {
@@ -405,7 +415,10 @@ function Files() {
       </div>
 
       {loading ? (
-        <div className="loading">Loading...</div>
+        <div className="loading">
+          <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
+          <div>Loading...</div>
+        </div>
       ) : (
         <div className="file-list">
           {(() => {
@@ -419,47 +432,78 @@ function Files() {
             if (displayItems.length === 0) {
               return (
                 <div className="empty">
-                  {isRoot 
-                    ? 'No folders in root directory' 
-                    : 'No files in this folder'}
+                  <div style={{ fontSize: '3rem', marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
+                    {isRoot ? (
+                      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ width: '64px', height: '64px' }}>
+                        <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z" fill="#d4a574"/>
+                        <path d="M10 4v4h8v-2c0-1.11-.89-2-2-2h-6l-2-2z" fill="#c49464" opacity="0.8"/>
+                      </svg>
+                    ) : (
+                      '📄'
+                    )}
+                  </div>
+                  <div>
+                    {isRoot 
+                      ? 'No folders in root directory' 
+                      : 'No files in this folder'}
+                  </div>
+                  <div style={{ fontSize: '0.9rem', color: '#adb5bd', marginTop: '0.5rem' }}>
+                    {isRoot 
+                      ? 'Create a folder to get started' 
+                      : 'Upload files to this folder'}
+                  </div>
                 </div>
               )
             }
             
             return displayItems.map((file) => (
-              <div key={file.identity} className="file-item">
+              <div 
+                key={file.identity} 
+                className="file-item"
+                data-type={file.ext === '' ? 'folder' : 'file'}
+              >
                 <div className="file-info">
                   <span className="file-icon">
-                    {file.ext === '' ? '📁' : '📄'}
+                    {file.ext === '' ? (
+                      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z" fill="#d4a574"/>
+                        <path d="M10 4v4h8v-2c0-1.11-.89-2-2-2h-6l-2-2z" fill="#c49464" opacity="0.8"/>
+                      </svg>
+                    ) : (
+                      '📄'
+                    )}
                   </span>
-                  {editingFile === file.identity ? (
-                    <input
-                      type="text"
-                      value={editFileName}
-                      onChange={(e) => setEditFileName(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          handleRename(file.identity, file.name)
-                        } else if (e.key === 'Escape') {
-                          setEditingFile(null)
-                          setEditFileName('')
-                        }
-                      }}
-                      onBlur={() => handleRename(file.identity, file.name)}
-                      autoFocus
-                      className="rename-input"
-                    />
-                  ) : (
-                    <>
-                      <span className="file-name">{file.name}</span>
-                      {/* Only show size for files, not folders */}
-                      {file.ext !== '' && file.size && file.size > 0 && (
-                        <span className="file-size">
-                          {(file.size / (1024 * 1024)).toFixed(2)} MB
-                        </span>
-                      )}
-                    </>
-                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {editingFile === file.identity ? (
+                      <input
+                        type="text"
+                        value={editFileName}
+                        onChange={(e) => setEditFileName(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleRename(file.identity, file.name)
+                          } else if (e.key === 'Escape') {
+                            setEditingFile(null)
+                            setEditFileName('')
+                          }
+                        }}
+                        onBlur={() => handleRename(file.identity, file.name)}
+                        autoFocus
+                        className="rename-input"
+                        style={{ width: '100%' }}
+                      />
+                    ) : (
+                      <>
+                        <div className="file-name">{file.name}</div>
+                        {/* Only show size for files, not folders */}
+                        {file.ext !== '' && file.size && file.size > 0 && (
+                          <div className="file-size">
+                            {(file.size / (1024 * 1024)).toFixed(2)} MB
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
                 <div className="file-actions">
                   {file.ext === '' ? (

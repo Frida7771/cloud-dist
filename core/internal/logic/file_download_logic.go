@@ -7,7 +7,7 @@ import (
 	"log"
 
 	"cloud-disk/core/helper"
-	"cloud-disk/core/internal/svc"
+	"cloud-disk/core/svc"
 	"cloud-disk/core/models"
 
 	"gorm.io/gorm"
@@ -46,30 +46,30 @@ func (l *FileDownloadLogic) FileDownload(repositoryIdentity, userIdentity string
 		Where("user_identity = ?", userIdentity).
 		Where("repository_identity = ?", repositoryIdentity).
 		First(&ur).Error
-	
+
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Printf("[FileDownload] Access denied: User %s does not have repository %s in user_repository", userIdentity, repositoryIdentity)
-			
+
 			// Additional debug info
 			var totalCount int64
 			l.svcCtx.DB.WithContext(l.ctx).Model(&models.UserRepository{}).
 				Where("user_identity = ?", userIdentity).
 				Count(&totalCount)
 			log.Printf("[FileDownload] Debug: User %s has %d total files in repository", userIdentity, totalCount)
-			
+
 			var repoCount int64
 			l.svcCtx.DB.WithContext(l.ctx).Model(&models.UserRepository{}).
 				Where("repository_identity = ?", repositoryIdentity).
 				Count(&repoCount)
 			log.Printf("[FileDownload] Debug: Repository %s exists in %d user_repository records", repositoryIdentity, repoCount)
-			
+
 			return nil, "", "", errors.New("access denied: file not found in your repository")
 		}
 		log.Printf("[FileDownload] Failed to check access: %v", err)
 		return nil, "", "", err
 	}
-	
+
 	log.Printf("[FileDownload] Access granted: User %s has access to repository %s", userIdentity, repositoryIdentity)
 
 	// Extract S3 key from path
@@ -111,4 +111,3 @@ func (l *FileDownloadLogic) FileDownload(repositoryIdentity, userIdentity string
 	log.Printf("[FileDownload] Successfully prepared file download: key=%s, name=%s, type=%s", s3Key, fileName, contentType)
 	return fileData, fileName, contentType, nil
 }
-

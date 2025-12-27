@@ -32,7 +32,7 @@ func (m *AuthMiddleware) Handle(c *gin.Context) {
 	// Remove "Bearer " prefix if present
 	token := strings.TrimPrefix(auth, "Bearer ")
 	token = strings.TrimSpace(token)
-	
+
 	// Check if token is blacklisted (if Redis is available)
 	if m.RDB != nil {
 		blacklistKey := "token:blacklist:" + token
@@ -43,7 +43,7 @@ func (m *AuthMiddleware) Handle(c *gin.Context) {
 			return
 		}
 	}
-	
+
 	uc, err := helper.AnalyzeToken(token)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
@@ -60,6 +60,6 @@ func (m *AuthMiddleware) Handle(c *gin.Context) {
 	c.Set("UserId", uc.Id)
 	c.Set("UserIdentity", uc.Identity)
 	c.Set("UserName", uc.Name)
-	
+
 	c.Next()
 }

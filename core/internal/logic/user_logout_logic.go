@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"cloud-disk/core/define"
-	"cloud-disk/core/internal/svc"
+	"cloud-disk/core/svc"
 	"cloud-disk/core/internal/types"
 )
 
@@ -41,4 +41,5 @@ func (l *UserLogoutLogic) UserLogout(req *types.UserLogoutRequest, token string)
 	resp = &types.UserLogoutReply{}
 	return
 }
+
 

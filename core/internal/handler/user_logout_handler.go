@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"cloud-disk/core/internal/logic"
-	"cloud-disk/core/internal/svc"
+	"cloud-disk/core/svc"
 	"cloud-disk/core/internal/types"
 
 	"github.com/gin-gonic/gin"
@@ -19,11 +19,11 @@ func UserLogoutHandler(svcCtx *svc.ServiceContext) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Authorization header is required"})
 			return
 		}
-		
+
 		// Extract token
 		token := strings.TrimPrefix(auth, "Bearer ")
 		token = strings.TrimSpace(token)
-		
+
 		l := logic.NewUserLogoutLogic(c.Request.Context(), svcCtx)
 		resp, err := l.UserLogout(&types.UserLogoutRequest{}, token)
 		if err != nil {
@@ -33,4 +33,3 @@ func UserLogoutHandler(svcCtx *svc.ServiceContext) gin.HandlerFunc {
 		c.JSON(http.StatusOK, resp)
 	}
 }
-

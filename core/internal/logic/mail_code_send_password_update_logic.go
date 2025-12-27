@@ -9,7 +9,7 @@ import (
 
 	"cloud-disk/core/define"
 	"cloud-disk/core/helper"
-	"cloud-disk/core/internal/svc"
+	"cloud-disk/core/svc"
 	"cloud-disk/core/internal/types"
 	"cloud-disk/core/models"
 )
@@ -66,4 +66,5 @@ func (l *MailCodeSendPasswordUpdateLogic) MailCodeSendPasswordUpdate(req *types.
 	log.Printf("[MailCodeSendPasswordUpdate] Verification code sent successfully to: %s", req.Email)
 	return
 }
+
 

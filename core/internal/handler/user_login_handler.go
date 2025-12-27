@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"cloud-disk/core/internal/logic"
-	"cloud-disk/core/internal/svc"
+	"cloud-disk/core/svc"
 	"cloud-disk/core/internal/types"
 
 	"github.com/gin-gonic/gin"

@@ -7,7 +7,7 @@ import (
 	"log"
 
 	"cloud-disk/core/define"
-	"cloud-disk/core/internal/svc"
+	"cloud-disk/core/svc"
 	"cloud-disk/core/internal/types"
 	"cloud-disk/core/models"
 
@@ -118,4 +118,5 @@ func (l *StoragePurchaseSyncLogic) updateUserStorage(userIdentity string, additi
 	log.Printf("[StoragePurchaseSync] User %s storage increased by %d bytes", userIdentity, additionalStorage)
 	return nil
 }
+
 

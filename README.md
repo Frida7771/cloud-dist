@@ -68,7 +68,7 @@ Visit `http://localhost:3000` to use the application.
 
 ## Screenshots
 
-![Login](./screenshots/7.jpg) ![Files](./screenshots/2.jpg) ![Share](./screenshots/3.jpg) ![Settings](./screenshots/5.jpg) ![Payment](./screenshots/6.jpg)!
+![Login](./screenshots/7.jpg) ![Files](./screenshots/2.jpg) ![Share](./screenshots/3.jpg) ![Settings](./screenshots/5.jpg) ![Payment](./screenshots/6.jpg)![upload](./screenshots/8.jpg)
 
 ## License
 
