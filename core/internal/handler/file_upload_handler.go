@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"crypto/md5"
 	"errors"
 	"fmt"
 	"log"
@@ -14,6 +13,7 @@ import (
 	"cloud-disk/core/internal/types"
 	"cloud-disk/core/models"
 
+	"github.com/cespare/xxhash/v2"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -50,15 +50,15 @@ func FileUploadHandler(svcCtx *svc.ServiceContext) gin.HandlerFunc {
 			return
 		}
 
-		log.Printf("[FileUpload] Starting to read file content and calculate MD5")
+		log.Printf("[FileUpload] Starting to read file content and calculate xxHash64")
 		b := make([]byte, fileHeader.Size)
 		if _, err = file.Read(b); err != nil {
 			log.Printf("[FileUpload] Failed to read file: %v", err)
 			respondError(c, err)
 			return
 		}
-		hash := fmt.Sprintf("%x", md5.Sum(b))
-		log.Printf("[FileUpload] File MD5: %s", hash)
+		hash := fmt.Sprintf("%016x", xxhash.Sum64(b))
+		log.Printf("[FileUpload] File xxHash64: %s", hash)
 
 		rp := new(models.RepositoryPool)
 		err = svcCtx.DB.WithContext(c.Request.Context()).Where("hash = ?", hash).First(rp).Error

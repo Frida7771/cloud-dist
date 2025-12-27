@@ -39,7 +39,13 @@ func (l *UserFolderCreateLogic) UserFolderCreate(req *types.UserFolderCreateRequ
 		UserIdentity: userIdentity,
 		ParentId:     req.ParentId,
 		Name:         req.Name,
+		Ext:          "", // Empty ext indicates it's a folder
 	}
 	err = l.svcCtx.DB.WithContext(l.ctx).Create(data).Error
+	if err == nil {
+		resp = &types.UserFolderCreateReply{
+			Identity: data.Identity,
+		}
+	}
 	return
 }

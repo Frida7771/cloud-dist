@@ -2,11 +2,15 @@ package logic
 
 import (
 	"context"
+	"errors"
+	"log"
 
 	"cloud-disk/core/helper"
 	"cloud-disk/core/internal/svc"
 	"cloud-disk/core/internal/types"
 	"cloud-disk/core/models"
+
+	"gorm.io/gorm"
 )
 
 type FileUploadChunkCompleteLogic struct {
@@ -32,6 +36,25 @@ func (l *FileUploadChunkCompleteLogic) FileUploadChunkComplete(req *types.FileUp
 	if err = helper.S3PartUploadComplete(req.Key, req.UploadId, parts); err != nil {
 		return
 	}
+
+	// Check if file already exists (deduplication)
+	log.Printf("[FileUploadChunkComplete] Checking for existing file with xxHash64: %s (length: %d)", req.Md5, len(req.Md5))
+	existingRp := new(models.RepositoryPool)
+	err = l.svcCtx.DB.WithContext(l.ctx).Where("hash = ?", req.Md5).First(existingRp).Error
+	if err == nil {
+		log.Printf("[FileUploadChunkComplete] File already exists (deduplication): identity=%s, hash=%s", existingRp.Identity, existingRp.Hash)
+		// File already exists, return existing identity
+		resp = &types.FileUploadChunkCompleteReply{
+			Identity: existingRp.Identity,
+		}
+		return
+	}
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Printf("[FileUploadChunkComplete] Database error while checking for existing file: %v", err)
+		// Database error, not just "not found"
+		return
+	}
+	log.Printf("[FileUploadChunkComplete] File not found, creating new record with xxHash64: %s", req.Md5)
 
 	rp := &models.RepositoryPool{
 		Identity: helper.UUID(),

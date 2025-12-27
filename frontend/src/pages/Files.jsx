@@ -132,22 +132,39 @@ function Files() {
       })
       
       // Save to user repository with selected folder
-      await fileService.saveToRepository(
-        selectedFolderId,
-        uploadResponse.data.identity,
-        uploadResponse.data.ext,
-        uploadResponse.data.name
-      )
-      
-      // Close modal and refresh
-      setShowUploadModal(false)
-      setSelectedFile(null)
-      setSelectedFolderId(null)
-      setUploadProgress(0)
-      loadFiles()
+      try {
+        await fileService.saveToRepository(
+          selectedFolderId,
+          uploadResponse.data.identity,
+          uploadResponse.data.ext,
+          uploadResponse.data.name
+        )
+        
+        // Close modal and refresh
+        setShowUploadModal(false)
+        setSelectedFile(null)
+        setSelectedFolderId(null)
+        setUploadProgress(0)
+        loadFiles()
+      } catch (saveError) {
+        // Check if file already exists
+        const errorMessage = saveError.response?.data?.error || saveError.message
+        if (errorMessage && errorMessage.toLowerCase().includes('already exists')) {
+          alert('File already exists')
+          // Still close modal and refresh to show existing file
+          setShowUploadModal(false)
+          setSelectedFile(null)
+          setSelectedFolderId(null)
+          setUploadProgress(0)
+          loadFiles()
+        } else {
+          throw saveError // Re-throw other errors
+        }
+      }
     } catch (error) {
       console.error('Upload failed:', error)
       alert('Upload failed: ' + (error.response?.data?.error || error.message))
+      setUploadProgress(0)
     }
   }
 
@@ -213,10 +230,14 @@ function Files() {
     }
 
     try {
-      const parentId = currentPath[currentPath.length - 1].id
+      // Get parent ID: if in root (id === 0), use 0, otherwise use the folder's database ID
+      const currentFolder = currentPath[currentPath.length - 1]
+      const parentId = currentFolder.id === 0 ? 0 : currentFolder.id
+      console.log('Creating folder with parentId:', parentId, 'currentPath:', currentPath)
       const response = await fileService.createFolder(parentId, newFolderName.trim())
       setNewFolderName('')
       setShowCreateFolder(false)
+      // Refresh file list to show the new folder
       loadFiles()
     } catch (error) {
       console.error('Create folder failed:', error)

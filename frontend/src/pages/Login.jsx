@@ -42,35 +42,78 @@ function Login() {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
-        <h2>Login</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Username</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
+      <div className="login-wrapper">
+        <div className="login-features">
+          <h1>Cloud Dist</h1>
+          <p className="tagline">Your Secure Cloud Storage Solution</p>
+          <div className="features-list">
+            <div className="feature-item">
+              <span className="feature-icon">📁</span>
+              <div>
+                <h3>File Management</h3>
+                <p>Upload, organize, and manage your files with folders. Support for large files with intelligent chunked upload.</p>
+              </div>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">🔗</span>
+              <div>
+                <h3>File Sharing</h3>
+                <p>Share files with friends through secure links with expiration control. Share directly with your friends network.</p>
+              </div>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">👥</span>
+              <div>
+                <h3>Friend System</h3>
+                <p>Connect with friends and share files directly. Send and receive friend requests easily.</p>
+              </div>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">💾</span>
+              <div>
+                <h3>Expandable Storage</h3>
+                <p>Start with 5GB free storage. Purchase additional capacity as you need with secure Stripe payment.</p>
+              </div>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">🔒</span>
+              <div>
+                <h3>Secure & Fast</h3>
+                <p>Files stored on AWS S3 with xxHash64 deduplication. JWT authentication and encrypted connections.</p>
+              </div>
+            </div>
           </div>
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          {error && <div className="error">{error}</div>}
-          <button type="submit" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-          <p className="auth-link">
-            Don't have an account? <Link to="/register">Register</Link>
-          </p>
-        </form>
+        </div>
+        <div className="auth-card">
+          <h2>Login</h2>
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Username</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            {error && <div className="error">{error}</div>}
+            <button type="submit" disabled={loading}>
+              {loading ? 'Logging in...' : 'Login'}
+            </button>
+            <p className="auth-link">
+              Don't have an account? <Link to="/register">Register</Link>
+            </p>
+          </form>
+        </div>
       </div>
     </div>
   )

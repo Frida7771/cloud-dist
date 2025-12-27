@@ -23,7 +23,7 @@ func NewFileUploadLogic(ctx context.Context, svcCtx *svc.ServiceContext) *FileUp
 }
 
 func (l *FileUploadLogic) FileUpload(req *types.FileUploadRequest) (resp *types.FileUploadReply, err error) {
-	log.Printf("[FileUploadLogic] Creating file record: filename=%s, ext=%s, size=%d, MD5=%s", req.Name, req.Ext, req.Size, req.Hash)
+	log.Printf("[FileUploadLogic] Creating file record: filename=%s, ext=%s, size=%d, xxHash64=%s", req.Name, req.Ext, req.Size, req.Hash)
 
 	rp := &models.RepositoryPool{
 		Identity: helper.UUID(),

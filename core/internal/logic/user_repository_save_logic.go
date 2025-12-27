@@ -26,6 +26,34 @@ func NewUserRepositorySaveLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *UserRepositorySaveLogic) UserRepositorySave(req *types.UserRepositorySaveRequest, userIdentity string) (resp *types.UserRepositorySaveReply, err error) {
+	// Check if this file already exists in user_repository for this user (global deduplication - user level, not folder level)
+	log.Printf("[UserRepositorySave] Checking for duplicate: user=%s, repository_identity=%s",
+		userIdentity, req.RepositoryIdentity)
+
+	existingUr := new(models.UserRepository)
+	err = l.svcCtx.DB.WithContext(l.ctx).
+		Where("user_identity = ?", userIdentity).
+		Where("repository_identity = ?", req.RepositoryIdentity).
+		Where("deleted_at IS NULL").
+		First(existingUr).Error
+	if err == nil {
+		// File already exists in user's repository (anywhere)
+		log.Printf("[UserRepositorySave] File already exists in user repository: user=%s, repository_identity=%s, existing_identity=%s, existing_id=%d, existing_parent_id=%d",
+			userIdentity, req.RepositoryIdentity, existingUr.Identity, existingUr.ID, existingUr.ParentId)
+		// Return error to inform frontend that file already exists
+		err = errors.New("file already exists")
+		return
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// File doesn't exist, proceed with save
+		log.Printf("[UserRepositorySave] No duplicate found, proceeding with save")
+		err = nil // Clear the error
+	} else {
+		// Database error
+		log.Printf("[UserRepositorySave] Database error while checking for existing file: %v", err)
+		return
+	}
+
 	// Check if file exceeds capacity
 	rp := new(models.RepositoryPool)
 	if err = l.svcCtx.DB.WithContext(l.ctx).
