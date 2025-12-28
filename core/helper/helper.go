@@ -313,6 +313,33 @@ func S3PartUpload(r *http.Request) (string, error) {
 	return strings.Trim(aws.ToString(resp.ETag), "\""), nil
 }
 
+// S3ListParts lists all parts that have been uploaded for a multipart upload
+func S3ListParts(key, uploadID string) ([]MultipartPart, error) {
+	ctx := context.Background()
+	client, err := getS3Client(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.ListParts(ctx, &s3.ListPartsInput{
+		Bucket:   aws.String(define.S3Bucket),
+		Key:      aws.String(key),
+		UploadId: aws.String(uploadID),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	parts := make([]MultipartPart, 0, len(resp.Parts))
+	for _, part := range resp.Parts {
+		parts = append(parts, MultipartPart{
+			PartNumber: int32(aws.ToInt32(part.PartNumber)),
+			ETag:       strings.Trim(aws.ToString(part.ETag), "\""),
+		})
+	}
+	return parts, nil
+}
+
 // S3PartUploadComplete completes multipart upload
 func S3PartUploadComplete(key, uploadID string, parts []MultipartPart) error {
 	ctx := context.Background()

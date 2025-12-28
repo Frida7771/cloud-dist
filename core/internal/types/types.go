@@ -33,9 +33,10 @@ type FileUploadPrepareRequest struct {
 }
 
 type FileUploadPrepareReply struct {
-	Identity string `json:"identity"`
-	UploadId string `json:"upload_id"`
-	Key      string `json:"key"`
+	Identity string       `json:"identity"`
+	UploadId string       `json:"upload_id"`
+	Key      string       `json:"key"`
+	Parts    []UploadPart `json:"parts,optional"` // Already uploaded parts for resume
 }
 
 type RefreshAuthorizationRequest struct {

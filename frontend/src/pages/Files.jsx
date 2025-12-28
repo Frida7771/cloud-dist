@@ -115,6 +115,8 @@ function Files() {
   const [currentPath, setCurrentPath] = useState([{ id: 0, identity: '', name: 'Root' }])
   const [loading, setLoading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadStatus, setUploadStatus] = useState('idle') // 'idle', 'uploading', 'paused', 'completed'
+  const [uploadController, setUploadController] = useState(null)
   const [showCreateFolder, setShowCreateFolder] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
@@ -250,11 +252,26 @@ function Files() {
 
     try {
       setUploadProgress(0)
+      setUploadStatus('uploading')
       
-      // Upload file
-      const uploadResponse = await fileService.uploadFile(selectedFile, (progress) => {
-        setUploadProgress(progress)
-      })
+      // Upload file (returns controller for pause/resume/abort)
+      const uploadController = fileService.uploadFile(
+        selectedFile,
+        (progress) => {
+          setUploadProgress(progress)
+        },
+        () => {
+          setUploadStatus('paused')
+        },
+        () => {
+          setUploadStatus('uploading')
+        }
+      )
+      
+      setUploadController(uploadController)
+      
+      // Wait for upload to complete
+      const uploadResponse = await uploadController.promise
       
       // Save to user repository with selected folder
       try {
@@ -265,12 +282,21 @@ function Files() {
           uploadResponse.data.name
         )
         
-        // Close modal and refresh
-        setShowUploadModal(false)
-        setSelectedFile(null)
-        setSelectedFolderId(null)
-        setUploadProgress(0)
-        loadFiles()
+        setUploadStatus('completed')
+        
+        // Show success message
+        alert(t('uploadSuccess') || `File "${selectedFile.name}" uploaded successfully!`)
+        
+        // Close modal and refresh after a short delay
+        setTimeout(() => {
+          setShowUploadModal(false)
+          setSelectedFile(null)
+          setSelectedFolderId(null)
+          setUploadProgress(0)
+          setUploadStatus('idle')
+          setUploadController(null)
+          loadFiles()
+        }, 500)
       } catch (saveError) {
         // Check if file already exists
         const errorMessage = saveError.response?.data?.error || saveError.message
@@ -281,6 +307,8 @@ function Files() {
           setSelectedFile(null)
           setSelectedFolderId(null)
           setUploadProgress(0)
+          setUploadStatus('idle')
+          setUploadController(null)
           loadFiles()
         } else {
           throw saveError // Re-throw other errors
@@ -288,8 +316,35 @@ function Files() {
       }
     } catch (error) {
       console.error('Upload failed:', error)
-      alert('Upload failed: ' + (error.response?.data?.error || error.message))
+      if (error.message !== 'Upload cancelled') {
+        alert('Upload failed: ' + (error.response?.data?.error || error.message))
+      }
       setUploadProgress(0)
+      setUploadStatus('idle')
+      setUploadController(null)
+    }
+  }
+
+  const handlePauseUpload = () => {
+    if (uploadController) {
+      uploadController.pause()
+      setUploadStatus('paused')
+    }
+  }
+
+  const handleResumeUpload = () => {
+    if (uploadController) {
+      uploadController.resume()
+      setUploadStatus('uploading')
+    }
+  }
+
+  const handleCancelUpload = () => {
+    if (uploadController) {
+      uploadController.abort()
+      setUploadProgress(0)
+      setUploadStatus('idle')
+      setUploadController(null)
     }
   }
 
@@ -720,7 +775,7 @@ function Files() {
 
       {showUploadModal && (
         <div className="modal-overlay" onClick={() => {
-          if (uploadProgress === 0) {
+          if (uploadStatus === 'idle' || uploadStatus === 'completed') {
             setShowUploadModal(false)
             setSelectedFile(null)
             setSelectedFolderId(null)
@@ -734,7 +789,7 @@ function Files() {
               <input
                 type="file"
                 onChange={handleFileSelect}
-                disabled={uploadProgress > 0}
+                disabled={uploadStatus === 'uploading' || uploadStatus === 'paused'}
               />
               {selectedFile && (
                 <div className="file-info">
@@ -749,7 +804,7 @@ function Files() {
               <select
                 value={selectedFolderId || ''}
                 onChange={(e) => setSelectedFolderId(e.target.value ? Number(e.target.value) : null)}
-                disabled={uploadProgress > 0}
+                disabled={uploadStatus === 'uploading' || uploadStatus === 'paused'}
                 required
               >
                 <option value="">-- {t('selectFolder')} --</option>
@@ -768,34 +823,120 @@ function Files() {
               )}
             </div>
 
-            {uploadProgress > 0 && (
-              <div className="upload-progress-bar">
-                <div className="progress-fill" style={{ width: `${uploadProgress}%` }}></div>
-                <span>Uploading: {uploadProgress}%</span>
+            {(uploadProgress > 0 || uploadStatus === 'paused' || uploadStatus === 'completed') && (
+              <div className="upload-progress-container">
+                <div className="upload-progress-bar">
+                  <div className="progress-fill" style={{ width: `${uploadProgress}%` }}></div>
+                  <span>
+                    {uploadStatus === 'paused' 
+                      ? `Paused: ${uploadProgress}%` 
+                      : uploadStatus === 'completed'
+                      ? `${t('uploadSuccess')} ${uploadProgress}%`
+                      : `Uploading: ${uploadProgress}%`}
+                  </span>
+                </div>
+                {uploadStatus === 'completed' && (
+                  <div className="upload-status-info" style={{ 
+                    fontSize: '0.9rem', 
+                    color: '#52c41a',
+                    marginTop: '0.5rem',
+                    fontWeight: '500'
+                  }}>
+                    ✓ {t('uploadSuccess')}
+                  </div>
+                )}
+                {selectedFile && selectedFile.size > 20 * 1024 * 1024 && uploadStatus !== 'completed' && (
+                  <div className="upload-status-info" style={{ 
+                    fontSize: '0.85rem', 
+                    color: uploadStatus === 'paused' ? '#faad14' : '#52c41a',
+                    marginTop: '0.5rem'
+                  }}>
+                    {uploadStatus === 'paused' 
+                      ? 'Upload paused. Click Resume to continue.' 
+                      : uploadStatus === 'uploading'
+                      ? 'Large file upload in progress. You can pause and resume.'
+                      : ''}
+                  </div>
+                )}
               </div>
             )}
 
             <div className="modal-actions">
-              <button
-                onClick={handleUpload}
-                disabled={!selectedFile || uploadProgress > 0}
-                className="btn-primary"
-              >
-                {uploadProgress > 0 ? t('uploading') : t('upload')}
-              </button>
-              <button
-                onClick={() => {
-                  if (uploadProgress === 0) {
+              {uploadStatus === 'idle' && (
+                <button
+                  onClick={handleUpload}
+                  disabled={!selectedFile}
+                  className="btn-primary"
+                >
+                  {t('upload')}
+                </button>
+              )}
+              {uploadStatus === 'uploading' && (
+                <>
+                  <button
+                    onClick={handlePauseUpload}
+                    className="btn-default"
+                    style={{ marginRight: '0.5rem' }}
+                  >
+                    Pause
+                  </button>
+                  <button
+                    onClick={handleCancelUpload}
+                    className="btn-default"
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
+              {uploadStatus === 'paused' && (
+                <>
+                  <button
+                    onClick={handleResumeUpload}
+                    className="btn-primary"
+                    style={{ marginRight: '0.5rem' }}
+                  >
+                    Resume
+                  </button>
+                  <button
+                    onClick={handleCancelUpload}
+                    className="btn-default"
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
+              {uploadStatus === 'completed' && (
+                <button
+                  onClick={() => {
                     setShowUploadModal(false)
                     setSelectedFile(null)
-                    setSelectedFolderId(0)
-                  }
-                }}
-                disabled={uploadProgress > 0}
-                className="btn-default"
-              >
-                {t('cancel')}
-              </button>
+                    setSelectedFolderId(null)
+                    setUploadProgress(0)
+                    setUploadStatus('idle')
+                    setUploadController(null)
+                  }}
+                  className="btn-primary"
+                >
+                  Close
+                </button>
+              )}
+              {(uploadStatus === 'idle' || uploadStatus === 'completed') && (
+                <button
+                  onClick={() => {
+                    if (uploadStatus === 'idle' || uploadStatus === 'completed') {
+                      setShowUploadModal(false)
+                      setSelectedFile(null)
+                      setSelectedFolderId(null)
+                      setUploadProgress(0)
+                      setUploadStatus('idle')
+                      setUploadController(null)
+                    }
+                  }}
+                  className="btn-default"
+                >
+                  {t('cancel')}
+                </button>
+              )}
             </div>
           </div>
         </div>
