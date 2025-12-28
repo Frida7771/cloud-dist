@@ -17,6 +17,9 @@ function Files() {
   const [newFolderName, setNewFolderName] = useState('')
   const [editingFile, setEditingFile] = useState(null)
   const [editFileName, setEditFileName] = useState('')
+  const [showMoveModal, setShowMoveModal] = useState(false)
+  const [fileToMove, setFileToMove] = useState(null)
+  const [moveTargetFolderId, setMoveTargetFolderId] = useState(null)
 
   useEffect(() => {
     loadFiles()
@@ -27,6 +30,12 @@ function Files() {
       loadAllFolders()
     }
   }, [showUploadModal])
+
+  useEffect(() => {
+    if (showMoveModal) {
+      loadAllFolders()
+    }
+  }, [showMoveModal])
 
   const loadFiles = async () => {
     setLoading(true)
@@ -269,6 +278,68 @@ function Files() {
     setEditFileName(file.name)
   }
 
+  const startMove = (file) => {
+    setFileToMove(file)
+    setMoveTargetFolderId(null)
+    setShowMoveModal(true)
+  }
+
+  const handleMove = async () => {
+    if (!fileToMove) {
+      alert('No file selected')
+      return
+    }
+
+    // Allow moving to root (moveTargetFolderId === 0 or null)
+    // For root, we use empty string as parent_identity
+    let targetParentIdentity = ''
+    
+    if (moveTargetFolderId !== null && moveTargetFolderId !== 0 && moveTargetFolderId !== '') {
+      // Find the target folder identity
+      const targetFolder = folders.find(f => f.id === moveTargetFolderId)
+      if (!targetFolder) {
+        alert('Invalid target folder')
+        return
+      }
+      
+      // If target folder has identity, use it; otherwise it's root
+      if (targetFolder.identity) {
+        targetParentIdentity = targetFolder.identity
+      }
+      
+      // Prevent moving to the same folder
+      const currentFolder = currentPath[currentPath.length - 1]
+      if (targetFolder.id === currentFolder.id) {
+        alert('File is already in this folder')
+        return
+      }
+    } else {
+      // Moving to root - check if already in root
+      const currentFolder = currentPath[currentPath.length - 1]
+      if (currentFolder.id === 0) {
+        alert('File is already in root directory')
+        return
+      }
+    }
+
+    // Prevent moving a folder into itself
+    if (fileToMove.ext === '' && moveTargetFolderId === fileToMove.id) {
+      alert('Cannot move a folder into itself')
+      return
+    }
+
+    try {
+      await fileService.moveFile(fileToMove.identity, targetParentIdentity)
+      setShowMoveModal(false)
+      setFileToMove(null)
+      setMoveTargetFolderId(null)
+      loadFiles()
+    } catch (error) {
+      console.error('Move failed:', error)
+      alert('Failed to move file: ' + (error.response?.data?.error || error.message))
+    }
+  }
+
   return (
     <div className="files">
       <div className="files-toolbar">
@@ -412,6 +483,73 @@ function Files() {
         </div>
       )}
 
+      {showMoveModal && (
+        <div className="modal-overlay" onClick={() => setShowMoveModal(false)}>
+          <div className="modal-content upload-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>{t('move')} {fileToMove?.name}</h3>
+            
+            <div className="form-group">
+              <label>{t('selectTargetFolder')}</label>
+              <select
+                value={moveTargetFolderId === null ? '' : moveTargetFolderId}
+                onChange={(e) => {
+                  const value = e.target.value
+                  if (value === '') {
+                    setMoveTargetFolderId(null)
+                  } else if (value === '0') {
+                    setMoveTargetFolderId(0)
+                  } else {
+                    setMoveTargetFolderId(Number(value))
+                  }
+                }}
+                required
+              >
+                <option value="">-- {t('selectFolder')} --</option>
+                <option value="0" style={{ fontWeight: 'bold' }}>📁 {t('root')}</option>
+                <option disabled>──────────</option>
+                {folders
+                  .filter(folder => {
+                    // Include all folders except:
+                    // 1. The file itself if it's a folder
+                    if (fileToMove && fileToMove.ext === '' && folder.id === fileToMove.id) return false
+                    // 2. Current folder (file is already there)
+                    const currentFolder = currentPath[currentPath.length - 1]
+                    if (folder.id === currentFolder.id) return false
+                    // 3. Root (already shown as separate option, not a folder)
+                    if (folder.id === 0) return false
+                    return true
+                  })
+                  .map((folder, index) => (
+                    <option key={folder.id || index} value={folder.id}>
+                      {'  '.repeat(folder.level || 0)}{folder.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            <div className="modal-actions">
+              <button
+                onClick={handleMove}
+                disabled={moveTargetFolderId === null}
+                className="btn-primary"
+              >
+                {t('move')}
+              </button>
+              <button
+                onClick={() => {
+                  setShowMoveModal(false)
+                  setFileToMove(null)
+                  setMoveTargetFolderId(null)
+                }}
+                className="btn-default"
+              >
+                {t('cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="files-container">
         {loading ? (
           <div className="loading">
@@ -421,11 +559,11 @@ function Files() {
           <div className="file-table-wrapper">
             {(() => {
               // Root directory: only show folders
-              // Inside folder: only show files (not subfolders)
+              // Inside folder: show both files and subfolders
               const isRoot = currentPath.length === 1
               const displayItems = isRoot
                 ? files.filter(file => file.ext === '') // Only folders in root
-                : files.filter(file => file.ext !== '') // Only files inside folder
+                : files // Show both files and subfolders inside folder
               
               if (displayItems.length === 0) {
                 return (
@@ -507,12 +645,14 @@ function Files() {
                             {file.ext === '' ? (
                               <>
                                 <button onClick={() => handleFolderClick(file)} className="btn-link">{t('open')}</button>
+                                <button onClick={() => startMove(file)} className="btn-link">{t('move')}</button>
                                 <button onClick={() => startRename(file)} className="btn-link">{t('rename')}</button>
                                 <button onClick={() => handleDelete(file.identity)} className="btn-link danger">{t('delete')}</button>
                               </>
                             ) : (
                               <>
                                 <button onClick={() => handleDownload(file.repository_identity, file.name + file.ext)} className="btn-link">{t('download')}</button>
+                                <button onClick={() => startMove(file)} className="btn-link">{t('move')}</button>
                                 <button onClick={() => startRename(file)} className="btn-link">{t('rename')}</button>
                                 <button onClick={() => handleDelete(file.identity)} className="btn-link danger">{t('delete')}</button>
                               </>

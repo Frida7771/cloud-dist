@@ -24,20 +24,26 @@ func NewUserFileMoveLogic(ctx context.Context, svcCtx *svc.ServiceContext) *User
 }
 
 func (l *UserFileMoveLogic) UserFileMove(req *types.UserFileMoveRequest, userIdentity string) (resp *types.UserFileMoveReply, err error) {
-	//parentID
-	parentData := new(models.UserRepository)
-	err = l.svcCtx.DB.WithContext(l.ctx).
-		Where("identity = ? AND user_identity = ?", req.ParentIdnetity, userIdentity).
-		First(parentData).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errors.New("folder does not exist")
+	var parentID int64 = 0 // Default to root (parent_id = 0)
+	
+	// If parent_identity is provided (not empty), find the parent folder
+	if req.ParentIdnetity != "" {
+		parentData := new(models.UserRepository)
+		err = l.svcCtx.DB.WithContext(l.ctx).
+			Where("identity = ? AND user_identity = ?", req.ParentIdnetity, userIdentity).
+			First(parentData).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("folder does not exist")
+		}
+		if err != nil {
+			return nil, err
+		}
+		parentID = parentData.ID
 	}
-	if err != nil {
-		return nil, err
-	}
+	// If parent_identity is empty, parentID remains 0 (root directory)
 
 	err = l.svcCtx.DB.WithContext(l.ctx).Model(&models.UserRepository{}).
-		Where("identity = ?", req.Idnetity).
-		Update("parent_id", parentData.ID).Error
+		Where("identity = ? AND user_identity = ?", req.Idnetity, userIdentity).
+		Update("parent_id", parentID).Error
 	return
 }

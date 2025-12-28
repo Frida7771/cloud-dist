@@ -24,6 +24,7 @@ const translations = {
     upload: 'Upload',
     download: 'Download',
     rename: 'Rename',
+    move: 'Move',
     open: 'Open',
     close: 'Close',
     loading: 'Loading...',
@@ -53,6 +54,8 @@ const translations = {
     selectFile: 'Select File',
     uploadToFolder: 'Upload To Folder (Required)',
     selectFolder: 'Select a folder',
+    selectTargetFolder: 'Select Target Folder',
+    root: 'Root',
     uploading: 'Uploading...',
     noFolders: 'No folders',
     noFiles: 'No files',
@@ -98,6 +101,7 @@ const translations = {
     upload: '上传',
     download: '下载',
     rename: '重命名',
+    move: '移动',
     open: '打开',
     close: '关闭',
     loading: '加载中...',
@@ -127,6 +131,8 @@ const translations = {
     selectFile: '选择文件',
     uploadToFolder: '上传到文件夹（必选）',
     selectFolder: '选择文件夹',
+    selectTargetFolder: '选择目标文件夹',
+    root: '根目录',
     uploading: '上传中...',
     noFolders: '暂无文件夹',
     noFiles: '暂无文件',
@@ -194,7 +200,7 @@ export function AppProvider({ children }) {
   )
 }
 
-export function useApp() {
+export const useApp = () => {
   const context = useContext(AppContext)
   if (!context) {
     throw new Error('useApp must be used within AppProvider')
