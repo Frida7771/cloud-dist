@@ -3,6 +3,112 @@ import { fileService } from '../services/fileService'
 import { useApp } from '../contexts/AppContext'
 import './Files.css'
 
+// File icon component based on file extension
+const FileIcon = ({ ext }) => {
+  const getIcon = (extension) => {
+    const extLower = extension.toLowerCase()
+    
+    // PDF
+    if (extLower === '.pdf') {
+      return (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" fill="#e74c3c"/>
+        </svg>
+      )
+    }
+    
+    // Word documents
+    if (['.doc', '.docx'].includes(extLower)) {
+      return (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" fill="#2b579a"/>
+        </svg>
+      )
+    }
+    
+    // Excel
+    if (['.xls', '.xlsx'].includes(extLower)) {
+      return (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" fill="#1d6f42"/>
+        </svg>
+      )
+    }
+    
+    // PowerPoint
+    if (['.ppt', '.pptx'].includes(extLower)) {
+      return (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" fill="#d04423"/>
+        </svg>
+      )
+    }
+    
+    // Images
+    if (['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'].includes(extLower)) {
+      return (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" fill="#4caf50"/>
+        </svg>
+      )
+    }
+    
+    // Videos
+    if (['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.mkv'].includes(extLower)) {
+      return (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z" fill="#f44336"/>
+        </svg>
+      )
+    }
+    
+    // Audio
+    if (['.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a'].includes(extLower)) {
+      return (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" fill="#9c27b0"/>
+        </svg>
+      )
+    }
+    
+    // Text files
+    if (['.txt', '.md', '.log', '.csv'].includes(extLower)) {
+      return (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" fill="#757575"/>
+        </svg>
+      )
+    }
+    
+    // Code files
+    if (['.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cpp', '.c', '.html', '.css', '.json', '.xml', '.yaml', '.yml'].includes(extLower)) {
+      return (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0L19.2 12l-4.6-4.6L16 6l6 6-6 6-1.4-1.4z" fill="#ff9800"/>
+        </svg>
+      )
+    }
+    
+    // Archives
+    if (['.zip', '.rar', '.7z', '.tar', '.gz'].includes(extLower)) {
+      return (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z" fill="#ff9800"/>
+        </svg>
+      )
+    }
+    
+    // Default file icon
+    return (
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" fill="#3385ff"/>
+      </svg>
+    )
+  }
+  
+  return getIcon(ext)
+}
+
 function Files() {
   const { t } = useApp()
   const [files, setFiles] = useState([])
@@ -20,6 +126,11 @@ function Files() {
   const [showMoveModal, setShowMoveModal] = useState(false)
   const [fileToMove, setFileToMove] = useState(null)
   const [moveTargetFolderId, setMoveTargetFolderId] = useState(null)
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
+  const [previewFile, setPreviewFile] = useState(null)
+  const [previewUrl, setPreviewUrl] = useState(null)
+  const [previewContent, setPreviewContent] = useState(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
 
   useEffect(() => {
     loadFiles()
@@ -224,6 +335,204 @@ function Files() {
       console.error('Download failed:', error)
       alert('Download failed: ' + (error.response?.data?.error || error.message))
     }
+  }
+
+  const handleFilePreview = async (file) => {
+    if (file.ext === '') {
+      // It's a folder, open it instead
+      handleFolderClick(file)
+      return
+    }
+
+    setPreviewFile(file)
+    setShowPreviewModal(true)
+    setPreviewLoading(true)
+    setPreviewUrl(null)
+    setPreviewContent(null)
+
+    try {
+      const response = await fileService.downloadFile(file.repository_identity)
+      const contentType = response.headers['content-type'] || 'application/octet-stream'
+      const extLower = file.ext.toLowerCase()
+      
+      // For text files, read as text
+      if (['.txt', '.md', '.log', '.csv', '.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cpp', '.c', '.h', '.html', '.css', '.json', '.xml', '.yaml', '.yml'].includes(extLower) || contentType.startsWith('text/')) {
+        // response.data is already a Blob, convert to text
+        const text = await response.data.text()
+        setPreviewContent(text)
+      } else if (['.doc', '.docx'].includes(extLower)) {
+        // Word documents cannot be previewed, show download option
+        setPreviewUrl(null)
+        setPreviewContent(null)
+      } else {
+        // For other files (images, PDF, video, audio), create blob URL
+        // response.data is already a Blob
+        const url = window.URL.createObjectURL(response.data)
+        setPreviewUrl(url)
+      }
+    } catch (error) {
+      console.error('Preview failed:', error)
+      alert('Preview failed: ' + (error.response?.data?.error || error.message))
+      setShowPreviewModal(false)
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
+  const closePreview = () => {
+    if (previewUrl) {
+      window.URL.revokeObjectURL(previewUrl)
+    }
+    setShowPreviewModal(false)
+    setPreviewFile(null)
+    setPreviewUrl(null)
+    setPreviewContent(null)
+    setPreviewLoading(false)
+  }
+
+  const canPreview = (ext) => {
+    const extLower = ext.toLowerCase()
+    const previewableTypes = [
+      // Images
+      '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg',
+      // PDF
+      '.pdf',
+      // Text
+      '.txt', '.md', '.log', '.csv',
+      // Code
+      '.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cpp', '.c', '.h',
+      '.html', '.css', '.json', '.xml', '.yaml', '.yml',
+      // Video
+      '.mp4', '.webm', '.mov',
+      // Audio
+      '.mp3', '.wav', '.ogg',
+      // Office documents (will show preview option, but may need download)
+      '.doc', '.docx'
+    ]
+    return previewableTypes.includes(extLower)
+  }
+
+  const getPreviewComponent = (file, url, content, loading) => {
+    if (loading) {
+      return (
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <div>{t('loading')}</div>
+        </div>
+      )
+    }
+
+    if (!url && !content) {
+      return (
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <div>{t('previewNotAvailable') || 'Preview not available'}</div>
+        </div>
+      )
+    }
+
+    const extLower = file.ext.toLowerCase()
+
+    // Text files - display as text
+    if (content !== null) {
+      return (
+        <pre style={{ 
+          textAlign: 'left', 
+          padding: '20px', 
+          backgroundColor: '#f5f5f5', 
+          borderRadius: '4px',
+          overflow: 'auto',
+          maxHeight: '80vh',
+          margin: 0,
+          fontSize: '14px',
+          lineHeight: '1.5',
+          fontFamily: 'monospace'
+        }}>
+          {content}
+        </pre>
+      )
+    }
+
+    // Images
+    if (['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'].includes(extLower)) {
+      return (
+        <img 
+          src={url} 
+          alt={file.name}
+          style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }}
+        />
+      )
+    }
+
+    // PDF
+    if (extLower === '.pdf') {
+      return (
+        <iframe
+          src={url}
+          style={{ width: '100%', height: '80vh', border: 'none' }}
+          title={file.name}
+        />
+      )
+    }
+
+    // Video
+    if (['.mp4', '.webm', '.mov'].includes(extLower)) {
+      return (
+        <video
+          src={url}
+          controls
+          style={{ maxWidth: '100%', maxHeight: '80vh' }}
+        >
+          {t('videoNotSupported') || 'Your browser does not support video playback'}
+        </video>
+      )
+    }
+
+    // Audio
+    if (['.mp3', '.wav', '.ogg'].includes(extLower)) {
+      return (
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <audio src={url} controls style={{ width: '100%' }}>
+            {t('audioNotSupported') || 'Your browser does not support audio playback'}
+          </audio>
+        </div>
+      )
+    }
+
+    // Word documents - cannot preview directly in browser
+    if (['.doc', '.docx'].includes(extLower)) {
+      return (
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <div style={{ marginBottom: '20px', fontSize: '16px', color: '#666' }}>
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '64px', height: '64px', margin: '0 auto 20px', opacity: 0.5 }}>
+              <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" fill="#2b579a"/>
+            </svg>
+            <p style={{ margin: '10px 0', fontWeight: '500' }}>
+              {t('docPreviewNotSupported') || 'Word documents cannot be previewed in the browser'}
+            </p>
+            <p style={{ margin: '10px 0', fontSize: '14px', color: '#999', lineHeight: '1.6' }}>
+              {t('docPreviewReason') || 'Browser does not natively support Word format. Please download the file to view it with Microsoft Word or other compatible software.'}
+            </p>
+            {extLower === '.doc' && (
+              <p style={{ margin: '10px 0', fontSize: '13px', color: '#ff9800' }}>
+                {t('docOldFormatNote') || 'Note: Old Word format (.doc) requires Microsoft Word or compatible software.'}
+              </p>
+            )}
+          </div>
+          <button onClick={() => handleDownload(file.repository_identity, file.name + file.ext)} className="btn-primary" style={{ marginTop: '10px' }}>
+            {t('download')} {t('toView') || 'to View'}
+          </button>
+        </div>
+      )
+    }
+
+    // Default: show download option
+    return (
+      <div style={{ textAlign: 'center', padding: '40px' }}>
+        <p>{t('previewNotSupported') || 'Preview not supported for this file type'}</p>
+        <button onClick={() => handleDownload(file.repository_identity, file.name + file.ext)} className="btn-primary">
+          {t('download')}
+        </button>
+      </div>
+    )
   }
 
   const handleFolderClick = (folder) => {
@@ -483,6 +792,28 @@ function Files() {
         </div>
       )}
 
+      {showPreviewModal && previewFile && (
+        <div className="modal-overlay" onClick={closePreview}>
+          <div className="modal-content preview-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '90vw', maxHeight: '90vh', overflow: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '10px', borderBottom: '1px solid #e0e0e0' }}>
+              <h3 style={{ margin: 0 }}>{previewFile.name}</h3>
+              <button onClick={closePreview} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', padding: '0 10px' }}>×</button>
+            </div>
+            <div style={{ textAlign: 'center', minHeight: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {getPreviewComponent(previewFile, previewUrl, previewContent, previewLoading)}
+            </div>
+            <div style={{ marginTop: '20px', paddingTop: '10px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button onClick={() => handleDownload(previewFile.repository_identity, previewFile.name + previewFile.ext)} className="btn-primary">
+                {t('download')}
+              </button>
+              <button onClick={closePreview} className="btn-default">
+                {t('close')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showMoveModal && (
         <div className="modal-overlay" onClick={() => setShowMoveModal(false)}>
           <div className="modal-content upload-modal" onClick={(e) => e.stopPropagation()}>
@@ -601,9 +932,7 @@ function Files() {
                                   <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z" fill="#ffa940"/>
                                 </svg>
                               ) : (
-                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" fill="#3385ff"/>
-                                </svg>
+                                <FileIcon ext={file.ext} />
                               )}
                             </span>
                             {editingFile === file.identity ? (
@@ -626,8 +955,14 @@ function Files() {
                             ) : (
                               <span 
                                 className="file-name"
-                                onClick={() => file.ext === '' && handleFolderClick(file)}
-                                style={{ cursor: file.ext === '' ? 'pointer' : 'default' }}
+                                onClick={() => {
+                                  if (file.ext === '') {
+                                    handleFolderClick(file)
+                                  } else if (canPreview(file.ext)) {
+                                    handleFilePreview(file)
+                                  }
+                                }}
+                                style={{ cursor: (file.ext === '' || canPreview(file.ext)) ? 'pointer' : 'default' }}
                               >
                                 {file.name}
                               </span>

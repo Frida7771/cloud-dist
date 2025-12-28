@@ -64,6 +64,16 @@ const translations = {
     name: 'Name',
     size: 'Size',
     actions: 'Actions',
+    preview: 'Preview',
+    previewNotAvailable: 'Preview not available',
+    previewNotSupported: 'Preview not supported for this file type',
+    videoNotSupported: 'Your browser does not support video playback',
+    audioNotSupported: 'Your browser does not support audio playback',
+    docPreviewNotSupported: 'Word documents cannot be previewed in the browser',
+    docPreviewReason: 'Browser does not natively support Word format. Please download the file to view it with Microsoft Word or other compatible software.',
+    docOldFormatNote: 'Note: Old Word format (.doc) requires Microsoft Word or compatible software.',
+    pleaseDownloadToView: 'Please download the file to view it.',
+    toView: 'to View',
     
     // Profile
     userInfo: 'User Info',
@@ -141,6 +151,16 @@ const translations = {
     name: '名称',
     size: '大小',
     actions: '操作',
+    preview: '预览',
+    previewNotAvailable: '预览不可用',
+    previewNotSupported: '此文件类型不支持预览',
+    videoNotSupported: '您的浏览器不支持视频播放',
+    audioNotSupported: '您的浏览器不支持音频播放',
+    docPreviewNotSupported: 'Word 文档无法在浏览器中预览',
+    docPreviewReason: '浏览器原生不支持 Word 格式。请下载文件后使用 Microsoft Word 或其他兼容软件查看。',
+    docOldFormatNote: '注意：旧版 Word 格式 (.doc) 需要 Microsoft Word 或兼容软件。',
+    pleaseDownloadToView: '请下载文件后查看。',
+    toView: '以查看',
     
     // Profile
     userInfo: '用户信息',
