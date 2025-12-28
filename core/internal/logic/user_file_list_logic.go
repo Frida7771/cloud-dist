@@ -3,11 +3,12 @@ package logic
 import (
 	"context"
 	"errors"
+	"time"
 
 	"cloud-dist/core/define"
-	"cloud-dist/core/svc"
 	"cloud-dist/core/internal/types"
 	"cloud-dist/core/models"
+	"cloud-dist/core/svc"
 
 	"gorm.io/gorm"
 )
@@ -69,7 +70,7 @@ func (l *UserFileListLogic) UserFileList(req *types.UserFileListRequest, userIde
 		Where("(user_repository.repository_identity = '' OR user_repository.repository_identity IS NULL OR user_repository.id IN (?))", subquery).
 		Joins("LEFT JOIN repository_pool ON user_repository.repository_identity = repository_pool.identity").
 		Select("user_repository.id, user_repository.identity, user_repository.repository_identity, user_repository.ext, " +
-			"user_repository.name, repository_pool.path, repository_pool.size")
+			"user_repository.name, repository_pool.path, repository_pool.size, user_repository.created_at")
 
 	if err = query.
 		Limit(size).
@@ -88,11 +89,17 @@ func (l *UserFileListLogic) UserFileList(req *types.UserFileListRequest, userIde
 
 	// Convert repository identity to download endpoint URL for each file
 	// This provides permanent download links that don't expire
+	// Also format created_at timestamp
 	for _, file := range files {
 		if file.RepositoryIdentity != "" {
 			// Use permanent download endpoint URL
 			// This URL will work as long as user has permission
 			file.Path = "/file/download?identity=" + file.RepositoryIdentity
+		}
+
+		// Format created_at timestamp
+		if file.CreatedAt == "" {
+			file.CreatedAt = time.Now().Format(define.Datetime)
 		}
 	}
 

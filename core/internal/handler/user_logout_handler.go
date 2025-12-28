@@ -13,19 +13,29 @@ import (
 
 func UserLogoutHandler(svcCtx *svc.ServiceContext) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Get token from Authorization header
-		auth := c.GetHeader("Authorization")
-		if auth == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Authorization header is required"})
+		// Get refresh token from request body
+		var req types.UserLogoutRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			// If no body, try to get from header (backward compatibility)
+			auth := c.GetHeader("Authorization")
+			if auth != "" {
+				// Extract token from Authorization header (for backward compatibility)
+				token := strings.TrimPrefix(auth, "Bearer ")
+				token = strings.TrimSpace(token)
+				req.RefreshToken = token
+			} else {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "refresh_token is required"})
+				return
+			}
+		}
+
+		if req.RefreshToken == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "refresh_token is required"})
 			return
 		}
 
-		// Extract token
-		token := strings.TrimPrefix(auth, "Bearer ")
-		token = strings.TrimSpace(token)
-
 		l := logic.NewUserLogoutLogic(c.Request.Context(), svcCtx)
-		resp, err := l.UserLogout(&types.UserLogoutRequest{}, token)
+		resp, err := l.UserLogout(&req, req.RefreshToken)
 		if err != nil {
 			respondError(c, err)
 			return

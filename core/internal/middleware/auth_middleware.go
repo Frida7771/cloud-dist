@@ -33,16 +33,9 @@ func (m *AuthMiddleware) Handle(c *gin.Context) {
 	token := strings.TrimPrefix(auth, "Bearer ")
 	token = strings.TrimSpace(token)
 
-	// Check if token is blacklisted (if Redis is available)
-	if m.RDB != nil {
-		blacklistKey := "token:blacklist:" + token
-		_, err := m.RDB.Get(c.Request.Context(), blacklistKey).Result()
-		if err == nil {
-			// Token found in blacklist
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token has been revoked"})
-			return
-		}
-	}
+	// Note: Access token blacklist check removed
+	// Access tokens are short-lived (1 hour), so we rely on refresh token blacklist instead
+	// This improves performance by avoiding Redis lookup on every request
 
 	uc, err := helper.AnalyzeToken(token)
 	if err != nil {

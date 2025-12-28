@@ -4,8 +4,9 @@ import api from '../services/api'
 const AuthContext = createContext()
 
 export function AuthProvider({ children }) {
-  // Load token from localStorage on initialization
+  // Load token and refresh token from localStorage on initialization
   const [token, setToken] = useState(localStorage.getItem('token') || '')
+  const [refreshToken, setRefreshToken] = useState(localStorage.getItem('refreshToken') || '')
   const [user, setUser] = useState(null)
   const [isInitialized, setIsInitialized] = useState(false)
 
@@ -37,14 +38,18 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Initialize: load token from localStorage and fetch user details
+  // Initialize: load token and refresh token from localStorage and fetch user details
   useEffect(() => {
     const storedToken = localStorage.getItem('token')
+    const storedRefreshToken = localStorage.getItem('refreshToken')
     if (storedToken) {
       setToken(storedToken)
       api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
       // Fetch user details immediately
       fetchUserDetail(storedToken)
+    }
+    if (storedRefreshToken) {
+      setRefreshToken(storedRefreshToken)
     }
     setIsInitialized(true)
   }, []) // Only run once on mount
@@ -87,18 +92,20 @@ export function AuthProvider({ children }) {
       
       // Check response format
       const newToken = response.data?.token || response.data?.Token
-      if (!newToken) {
+      const newRefreshToken = response.data?.refresh_token || response.data?.RefreshToken
+      if (!newToken || !newRefreshToken) {
         console.error('No token in response:', response.data)
         return { success: false, error: 'Invalid response from server' }
       }
       
-      // Set token immediately
+      // Set tokens immediately
       localStorage.setItem('token', newToken)
+      localStorage.setItem('refreshToken', newRefreshToken)
       api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
       
       // Update state synchronously - useEffect will handle fetching user details
-      // Small delay to ensure token is persisted before navigation
       setToken(newToken)
+      setRefreshToken(newRefreshToken)
       
       return { success: true }
     } catch (error) {
@@ -131,13 +138,20 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await api.post('/user/logout')
+      // Send refresh token to backend for blacklisting
+      const currentRefreshToken = localStorage.getItem('refreshToken')
+      if (currentRefreshToken) {
+        await api.post('/user/logout', { refresh_token: currentRefreshToken })
+      }
     } catch (error) {
       console.error('Logout error:', error)
     } finally {
+      // Clear tokens and user data regardless of API call success
       setToken('')
+      setRefreshToken('')
       setUser(null)
       localStorage.removeItem('token')
+      localStorage.removeItem('refreshToken')
       delete api.defaults.headers.common['Authorization']
     }
   }

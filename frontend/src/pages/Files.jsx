@@ -990,13 +990,37 @@ function Files() {
                 )
               }
               
+              // Format date function
+              const formatDateTime = (dateString) => {
+                if (!dateString) return '-'
+                try {
+                  const date = new Date(dateString)
+                  const year = date.getFullYear()
+                  const month = String(date.getMonth() + 1).padStart(2, '0')
+                  const day = String(date.getDate()).padStart(2, '0')
+                  const hours = String(date.getHours()).padStart(2, '0')
+                  const minutes = String(date.getMinutes()).padStart(2, '0')
+                  return `${year}-${month}-${day} ${hours}:${minutes}`
+                } catch (e) {
+                  return dateString
+                }
+              }
+
+              // Check if current folder only contains folders (no files)
+              const hasOnlyFolders = displayItems.length > 0 && displayItems.every(item => item.ext === '')
+              
               return (
                 <table className="file-table">
                   <thead>
                     <tr>
-                      <th style={{ width: '50%' }}>{t('name')}</th>
-                      <th style={{ width: '20%' }}>{t('size')}</th>
-                      <th style={{ width: '30%' }}>{t('actions')}</th>
+                      <th style={{ width: hasOnlyFolders ? '60%' : '40%' }}>{t('name')}</th>
+                      {!hasOnlyFolders && (
+                        <>
+                          <th style={{ width: '15%' }}>{t('size')}</th>
+                          <th style={{ width: '20%' }}>{t('uploadTime')}</th>
+                        </>
+                      )}
+                      <th style={{ width: hasOnlyFolders ? '40%' : '25%' }}>{t('actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1047,17 +1071,23 @@ function Files() {
                             )}
                           </div>
                         </td>
-                        <td className="file-size-cell">
-                          {file.ext !== '' && file.size && file.size > 0 
-                            ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
-                            : '-'
-                          }
-                        </td>
+                        {!hasOnlyFolders && (
+                          <>
+                            <td className="file-size-cell">
+                              {file.ext !== '' && file.size && file.size > 0 
+                                ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+                                : ''
+                              }
+                            </td>
+                            <td className="file-time-cell">
+                              {file.ext !== '' ? formatDateTime(file.created_at) : ''}
+                            </td>
+                          </>
+                        )}
                         <td className="file-actions-cell">
                           <div className="action-buttons">
                             {file.ext === '' ? (
                               <>
-                                <button onClick={() => handleFolderClick(file)} className="btn-link">{t('open')}</button>
                                 <button onClick={() => startMove(file)} className="btn-link">{t('move')}</button>
                                 <button onClick={() => startRename(file)} className="btn-link">{t('rename')}</button>
                                 <button onClick={() => handleDelete(file.identity)} className="btn-link danger">{t('delete')}</button>

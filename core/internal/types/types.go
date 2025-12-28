@@ -136,6 +136,7 @@ type UserFile struct {
 	Ext                string `json:"ext"`
 	Path               string `json:"path"`
 	Size               int64  `json:"size"`
+	CreatedAt          string `json:"created_at"`
 }
 
 type UserFolderListRequest struct {
@@ -237,6 +238,7 @@ type UserPasswordResetReply struct {
 }
 
 type UserLogoutRequest struct {
+	RefreshToken string `json:"refresh_token"`
 }
 
 type UserLogoutReply struct {
