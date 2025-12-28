@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"time"
 
-	"cloud-disk/core/router"
-	"cloud-disk/core/svc"
-	cfg "cloud-disk/internal/config"
+	"cloud-dist/core/router"
+	"cloud-dist/core/svc"
+	cfg "cloud-dist/internal/config"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"

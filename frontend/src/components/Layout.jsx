@@ -21,7 +21,7 @@ function Layout() {
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z" fill="#3385ff"/>
             </svg>
-            <span>CloudDisk</span>
+            <span>CloudDist</span>
           </div>
           <div className="header-actions">
             <button onClick={toggleLanguage} className="icon-btn" title={t('language')}>

@@ -76,13 +76,6 @@ type ShareBasicDetailReply struct {
 	Path               string `json:"path"`
 }
 
-type ShareBasicDownloadRequest struct {
-	ShareIdentity string `json:"share_identity,optional"`
-}
-
-type ShareBasicDownloadReply struct {
-}
-
 type ShareBasicCreateRequest struct {
 	UserRepositoryIdentity string `json:"user_repository_identity"`
 	ExpiredTime            int    `json:"expired_time"`

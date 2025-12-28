@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"cloud-disk/core/helper"
+	"cloud-dist/core/helper"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"

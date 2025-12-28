@@ -80,36 +80,10 @@ function ShareDetail() {
     }
   }
 
-  const handleDownload = async () => {
-    if (!shareInfo || !identity) return
-    
-    try {
-      // Use share download endpoint which doesn't require authentication
-      const response = await fileService.downloadShareFile(identity)
-      
-      let downloadFileName = shareInfo.name + shareInfo.ext
-      const contentDisposition = response.headers['content-disposition']
-      if (contentDisposition) {
-        const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
-        if (fileNameMatch && fileNameMatch[1]) {
-          downloadFileName = decodeURIComponent(fileNameMatch[1].replace(/['"]/g, ''))
-        }
-      }
-      
-      const contentType = response.headers['content-type'] || 'application/octet-stream'
-      const blob = new Blob([response.data], { type: contentType })
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', downloadFileName)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      setTimeout(() => window.URL.revokeObjectURL(url), 100)
-    } catch (error) {
-      console.error('Download failed:', error)
-      alert('Download failed: ' + (error.response?.data?.error || error.message))
-    }
+  const handlePreview = () => {
+    if (!shareInfo || !shareInfo.path) return
+    // Open presigned URL in new window for preview
+    window.open(shareInfo.path, '_blank')
   }
 
   const handleSaveToDisk = async () => {
@@ -134,12 +108,19 @@ function ShareDetail() {
     try {
       setSaving(true)
       await fileService.saveShareFile(shareInfo.repository_identity, targetFolderId)
-      alert('File saved to your disk successfully!')
+      alert('File saved to your dist successfully!')
       setShowSaveModal(false)
       setTargetFolderId(null)
     } catch (error) {
       console.error('Save failed:', error)
-      alert('Failed to save file: ' + (error.response?.data?.error || error.message))
+      // Handle 401 unauthorized error
+      if (error.response?.status === 401) {
+        alert('Please login to save files to your dist')
+        setShowSaveModal(false)
+        navigate('/login', { state: { returnTo: `/share/${identity}` } })
+      } else {
+        alert('Failed to save file: ' + (error.response?.data?.error || error.message))
+      }
     } finally {
       setSaving(false)
     }
@@ -195,12 +176,14 @@ function ShareDetail() {
           </div>
 
           <div className="share-actions">
-            <button onClick={handleDownload} className="btn-primary">
-              {t('download')}
+            <button onClick={handlePreview} className="btn-primary">
+              {t('preview')}
             </button>
-            <button onClick={handleSaveToDisk} className="btn-default">
-              {t('saveToDisk')}
-            </button>
+            {token && (
+              <button onClick={handleSaveToDisk} className="btn-default">
+                {t('saveToDisk')}
+              </button>
+            )}
           </div>
         </div>
       </div>

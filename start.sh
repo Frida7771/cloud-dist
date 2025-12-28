@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Cloud Disk - One-Click Development Startup Script
+# Cloud Dist - One-Click Development Startup Script
 # Starts: Backend (Go), Frontend (Vite), Stripe CLI Webhook Listener
 
 set -e

@@ -1,7 +1,7 @@
 package test
 
 import (
-	"cloud-disk/core/helper"
+	"cloud-dist/core/helper"
 	"testing"
 )
 

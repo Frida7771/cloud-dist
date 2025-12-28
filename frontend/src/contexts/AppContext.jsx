@@ -101,7 +101,7 @@ const translations = {
     shareNotFound: 'Share Not Found',
     shareLinkInvalid: 'The share link is invalid or has expired.',
     goHome: 'Go Home',
-    saveToDisk: 'Save to My Disk',
+    saveToDisk: 'Save to My Dist',
     selectTargetFolder: 'Select Target Folder',
     saving: 'Saving...',
     save: 'Save',
@@ -149,7 +149,7 @@ const translations = {
     failedToShareFile: 'Failed to share file',
     downloadFailed: 'Download failed',
     pleaseSelectFolder: 'Please select a folder',
-    fileSavedSuccessfully: 'File saved to your disk successfully',
+    fileSavedSuccessfully: 'File saved to your dist successfully',
     failedToSaveFile: 'Failed to save file',
   },
   zh: {

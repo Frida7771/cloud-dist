@@ -4,10 +4,10 @@ import (
 	"errors"
 	"net/http"
 
-	"cloud-disk/core/internal/logic"
-	"cloud-disk/core/internal/types"
-	"cloud-disk/core/models"
-	"cloud-disk/core/svc"
+	"cloud-dist/core/internal/logic"
+	"cloud-dist/core/internal/types"
+	"cloud-dist/core/models"
+	"cloud-dist/core/svc"
 
 	"github.com/gin-gonic/gin"
 )

@@ -2,12 +2,13 @@ package logic
 
 import (
 	"context"
+	"errors"
+	"time"
 
-	"cloud-disk/core/svc"
-	"cloud-disk/core/internal/types"
-	"cloud-disk/core/models"
-
-	"gorm.io/gorm"
+	"cloud-dist/core/helper"
+	"cloud-dist/core/internal/types"
+	"cloud-dist/core/models"
+	"cloud-dist/core/svc"
 )
 
 type ShareBasicDetailLogic struct {
@@ -23,10 +24,22 @@ func NewShareBasicDetailLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 }
 
 func (l *ShareBasicDetailLogic) ShareBasicDetail(req *types.ShareBasicDetailRequest) (resp *types.ShareBasicDetailReply, err error) {
-	if err = l.svcCtx.DB.WithContext(l.ctx).Model(&models.ShareBasic{}).
+	// Verify share link exists and not expired
+	sb := new(models.ShareBasic)
+	err = l.svcCtx.DB.WithContext(l.ctx).
 		Where("identity = ?", req.Identity).
-		UpdateColumn("click_num", gorm.Expr("click_num + 1")).Error; err != nil {
+		First(sb).Error
+	if err != nil {
 		return
+	}
+
+	// Check if share link has expired
+	if sb.ExpiredTime > 0 {
+		createdAt := sb.CreatedAt
+		expiredAt := createdAt.Add(time.Duration(sb.ExpiredTime) * time.Second)
+		if time.Now().After(expiredAt) {
+			return nil, errors.New("share link has expired")
+		}
 	}
 
 	resp = new(types.ShareBasicDetailReply)
@@ -40,10 +53,13 @@ func (l *ShareBasicDetailLogic) ShareBasicDetail(req *types.ShareBasicDetailRequ
 		return
 	}
 
-	// Convert share identity to download endpoint URL
-	// Use share download endpoint which doesn't require user_repository check
-	if req.Identity != "" {
-		resp.Path = "/share/basic/download?identity=" + req.Identity
+	// Generate presigned URL for direct access
+	// Presigned URL expiration should match share link expiration (3 days = 72 hours)
+	// This allows preview and download without going through backend
+	if resp.Path != "" {
+		// Path is S3 key, generate presigned URL
+		// 3 days = 72 hours expiration for presigned URL (matches share link expiration)
+		resp.Path = helper.S3PresignedURL(resp.Path, 72)
 	}
 
 	return

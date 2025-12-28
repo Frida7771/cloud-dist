@@ -6,9 +6,9 @@ import (
 	"io"
 	"log"
 
-	"cloud-disk/core/helper"
-	"cloud-disk/core/svc"
-	"cloud-disk/core/models"
+	"cloud-dist/core/helper"
+	"cloud-dist/core/models"
+	"cloud-dist/core/svc"
 
 	"gorm.io/gorm"
 )
@@ -73,7 +73,7 @@ func (l *FileDownloadLogic) FileDownload(repositoryIdentity, userIdentity string
 	log.Printf("[FileDownload] Access granted: User %s has access to repository %s", userIdentity, repositoryIdentity)
 
 	// Extract S3 key from path
-	// Path should be an S3 key (e.g., cloud-disk/xxx.jpg)
+	// Path should be an S3 key (e.g., cloud-dist/xxx.jpg)
 	s3Key := rp.Path
 	if s3Key == "" {
 		return nil, "", "", errors.New("file path is empty")

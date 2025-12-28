@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 
-	"cloud-disk/core/internal/logic"
-	"cloud-disk/core/svc"
+	"cloud-dist/core/internal/logic"
+	"cloud-dist/core/svc"
 
 	"github.com/gin-gonic/gin"
 )

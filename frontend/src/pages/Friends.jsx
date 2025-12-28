@@ -23,7 +23,7 @@ function Friends() {
   const [userFiles, setUserFiles] = useState([])
   const [shareType, setShareType] = useState('received') // 'received' or 'sent'
   
-  // Save to disk modal
+  // Save to dist modal
   const [showSaveModal, setShowSaveModal] = useState(false)
   const [fileToSave, setFileToSave] = useState(null)
   const [targetFolderId, setTargetFolderId] = useState(null)
@@ -483,7 +483,7 @@ function Friends() {
         </div>
       )}
 
-      {/* Save to Disk Modal */}
+      {/* Save to Dist Modal */}
       {showSaveModal && (
         <div className="modal-overlay" onClick={() => {
           if (!saving) {

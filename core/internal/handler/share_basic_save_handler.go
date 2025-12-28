@@ -3,15 +3,22 @@ package handler
 import (
 	"net/http"
 
-	"cloud-disk/core/internal/logic"
-	"cloud-disk/core/svc"
-	"cloud-disk/core/internal/types"
+	"cloud-dist/core/internal/logic"
+	"cloud-dist/core/internal/types"
+	"cloud-dist/core/svc"
 
 	"github.com/gin-gonic/gin"
 )
 
 func ShareBasicSaveHandler(svcCtx *svc.ServiceContext) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Verify user is authenticated
+		userIdentity := c.GetString("UserIdentity")
+		if userIdentity == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized: please login first"})
+			return
+		}
+
 		var req types.ShareBasicSaveRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -19,7 +26,7 @@ func ShareBasicSaveHandler(svcCtx *svc.ServiceContext) gin.HandlerFunc {
 		}
 
 		l := logic.NewShareBasicSaveLogic(c.Request.Context(), svcCtx)
-		resp, err := l.ShareBasicSave(&req, c.GetString("UserIdentity"))
+		resp, err := l.ShareBasicSave(&req, userIdentity)
 		if err != nil {
 			respondError(c, err)
 			return

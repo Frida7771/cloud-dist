@@ -1,4 +1,4 @@
-module cloud-disk
+module cloud-dist
 
 go 1.23.0
 

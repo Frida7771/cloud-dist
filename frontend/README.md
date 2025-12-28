@@ -1,6 +1,6 @@
-# CloudDisk Frontend
+# CloudDist Frontend
 
-React frontend for CloudDisk cloud storage application.
+React frontend for CloudDist cloud storage application.
 
 ## Setup
 

@@ -26,7 +26,7 @@ func InitJWTConfig(jwtKey string) {
 	}
 	// Fallback to default if still empty (for development only)
 	if JwtKey == "" {
-		JwtKey = "cloud-disk-key" // Default for development
+		JwtKey = "cloud-dist-key" // Default for development
 	}
 }
 

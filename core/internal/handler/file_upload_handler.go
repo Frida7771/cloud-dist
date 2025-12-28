@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"path"
 
-	"cloud-disk/core/helper"
-	"cloud-disk/core/internal/logic"
-	"cloud-disk/core/svc"
-	"cloud-disk/core/internal/types"
-	"cloud-disk/core/models"
+	"cloud-dist/core/helper"
+	"cloud-dist/core/internal/logic"
+	"cloud-dist/core/svc"
+	"cloud-dist/core/internal/types"
+	"cloud-dist/core/models"
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/gin-gonic/gin"

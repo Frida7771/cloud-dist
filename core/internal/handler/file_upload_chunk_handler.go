@@ -3,10 +3,10 @@ package handler
 import (
 	"net/http"
 
-	"cloud-disk/core/helper"
-	"cloud-disk/core/internal/logic"
-	"cloud-disk/core/internal/types"
-	"cloud-disk/core/svc"
+	"cloud-dist/core/helper"
+	"cloud-dist/core/internal/logic"
+	"cloud-dist/core/internal/types"
+	"cloud-dist/core/svc"
 
 	"github.com/gin-gonic/gin"
 )

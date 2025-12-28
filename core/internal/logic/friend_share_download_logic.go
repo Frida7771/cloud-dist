@@ -6,10 +6,10 @@ import (
 	"io"
 	"log"
 
-	"cloud-disk/core/helper"
-	"cloud-disk/core/internal/types"
-	"cloud-disk/core/models"
-	"cloud-disk/core/svc"
+	"cloud-dist/core/helper"
+	"cloud-dist/core/internal/types"
+	"cloud-dist/core/models"
+	"cloud-dist/core/svc"
 
 	"gorm.io/gorm"
 )

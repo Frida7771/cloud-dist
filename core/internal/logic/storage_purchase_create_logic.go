@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"log"
 
-	"cloud-disk/core/define"
-	"cloud-disk/core/helper"
-	"cloud-disk/core/svc"
-	"cloud-disk/core/internal/types"
-	"cloud-disk/core/models"
+	"cloud-dist/core/define"
+	"cloud-dist/core/helper"
+	"cloud-dist/core/svc"
+	"cloud-dist/core/internal/types"
+	"cloud-dist/core/models"
 
 	"github.com/stripe/stripe-go/v76"
 	"github.com/stripe/stripe-go/v76/checkout/session"

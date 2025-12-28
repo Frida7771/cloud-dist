@@ -3,9 +3,9 @@ package logic
 import (
 	"context"
 
-	"cloud-disk/core/svc"
-	"cloud-disk/core/internal/types"
-	"cloud-disk/core/models"
+	"cloud-dist/core/svc"
+	"cloud-dist/core/internal/types"
+	"cloud-dist/core/models"
 )
 
 type StorageOrderListLogic struct {

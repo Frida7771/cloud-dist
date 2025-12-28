@@ -3,10 +3,10 @@ package logic
 import (
 	"context"
 
-	"cloud-disk/core/define"
-	"cloud-disk/core/helper"
-	"cloud-disk/core/svc"
-	"cloud-disk/core/internal/types"
+	"cloud-dist/core/define"
+	"cloud-dist/core/helper"
+	"cloud-dist/core/svc"
+	"cloud-dist/core/internal/types"
 )
 
 type RefreshAuthorizationLogic struct {

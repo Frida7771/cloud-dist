@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"cloud-disk/core/define"
-	"cloud-disk/core/internal/types"
-	"cloud-disk/core/svc"
+	"cloud-dist/core/define"
+	"cloud-dist/core/internal/types"
+	"cloud-dist/core/svc"
 )
 
 type FriendShareListLogic struct {

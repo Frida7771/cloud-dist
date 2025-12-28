@@ -5,7 +5,7 @@
  Source Server Type    : MySQL
  Source Server Version : 50736
  Source Host           : 192.168.1.8:3306
- Source Schema         : cloud-disk
+ Source Schema         : cloud-dist
 
  Target Server Type    : MySQL
  Target Server Version : 50736

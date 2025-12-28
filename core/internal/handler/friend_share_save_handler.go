@@ -3,9 +3,9 @@ package handler
 import (
 	"errors"
 
-	"cloud-disk/core/internal/logic"
-	"cloud-disk/core/internal/types"
-	"cloud-disk/core/svc"
+	"cloud-dist/core/internal/logic"
+	"cloud-dist/core/internal/types"
+	"cloud-dist/core/svc"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,4 +33,3 @@ func FriendShareSaveHandler(svcCtx *svc.ServiceContext) gin.HandlerFunc {
 		c.JSON(200, resp)
 	}
 }
-

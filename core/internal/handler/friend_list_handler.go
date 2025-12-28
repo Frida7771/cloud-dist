@@ -3,9 +3,9 @@ package handler
 import (
 	"net/http"
 
-	"cloud-disk/core/internal/logic"
-	"cloud-disk/core/svc"
-	"cloud-disk/core/internal/types"
+	"cloud-dist/core/internal/logic"
+	"cloud-dist/core/svc"
+	"cloud-dist/core/internal/types"
 
 	"github.com/gin-gonic/gin"
 )

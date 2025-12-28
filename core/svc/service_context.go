@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"cloud-disk/core/define"
-	"cloud-disk/core/internal/middleware"
-	"cloud-disk/core/models"
-	appcfg "cloud-disk/internal/config"
+	"cloud-dist/core/define"
+	"cloud-dist/core/internal/middleware"
+	"cloud-dist/core/models"
+	appcfg "cloud-dist/internal/config"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"

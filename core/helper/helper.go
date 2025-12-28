@@ -2,7 +2,7 @@ package helper
 
 import (
 	"bytes"
-	"cloud-disk/core/define"
+	"cloud-dist/core/define"
 	"context"
 	"crypto/md5"
 	"errors"
@@ -167,6 +167,13 @@ func getS3Client(ctx context.Context) (*s3.Client, error) {
 // S3PresignedURL generates a presigned URL for S3 object with specified expiration time
 // expiresIn: expiration time in hours (e.g., 72 for 3 days)
 func S3PresignedURL(key string, expiresInHours int) string {
+	return S3PresignedURLWithDisposition(key, expiresInHours, "")
+}
+
+// S3PresignedURLWithDisposition generates a presigned URL with optional Content-Disposition header
+// expiresIn: expiration time in hours (e.g., 72 for 3 days)
+// filename: if provided, sets ResponseContentDisposition to force download
+func S3PresignedURLWithDisposition(key string, expiresInHours int, filename string) string {
 	ctx := context.Background()
 	client, err := getS3Client(ctx)
 	if err != nil {
@@ -180,10 +187,20 @@ func S3PresignedURL(key string, expiresInHours int) string {
 	}
 
 	presignClient := s3.NewPresignClient(client)
-	presignedURL, err := presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
+
+	// Build GetObjectInput
+	getObjectInput := &s3.GetObjectInput{
 		Bucket: aws.String(define.S3Bucket),
 		Key:    aws.String(key),
-	}, func(opts *s3.PresignOptions) {
+	}
+
+	// Add ResponseContentDisposition if filename is provided (for force download)
+	if filename != "" {
+		disposition := fmt.Sprintf("attachment; filename=\"%s\"", filename)
+		getObjectInput.ResponseContentDisposition = aws.String(disposition)
+	}
+
+	presignedURL, err := presignClient.PresignGetObject(ctx, getObjectInput, func(opts *s3.PresignOptions) {
 		opts.Expires = time.Duration(expiresInHours) * time.Hour
 	})
 
@@ -197,7 +214,7 @@ func S3PresignedURL(key string, expiresInHours int) string {
 		return fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", define.S3Bucket, region, key)
 	}
 
-	log.Printf("[S3PresignedURL] Successfully generated presigned URL: key=%s, expiresIn=%d hours", key, expiresInHours)
+	log.Printf("[S3PresignedURL] Successfully generated presigned URL: key=%s, expiresIn=%d hours, filename=%s", key, expiresInHours, filename)
 	return presignedURL.URL
 }
 
@@ -216,7 +233,7 @@ func S3Upload(r *http.Request) (string, error) {
 	}
 	defer file.Close()
 
-	key := "cloud-disk/" + UUID() + path.Ext(fileHeader.Filename)
+	key := "cloud-dist/" + UUID() + path.Ext(fileHeader.Filename)
 	_, err = client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(define.S3Bucket),
 		Key:         aws.String(key),
@@ -245,7 +262,7 @@ func S3InitPart(ext string) (string, string, error) {
 		return "", "", err
 	}
 
-	key := "cloud-disk/" + UUID() + ext
+	key := "cloud-dist/" + UUID() + ext
 	resp, err := client.CreateMultipartUpload(ctx, &s3.CreateMultipartUploadInput{
 		Bucket: aws.String(define.S3Bucket),
 		Key:    aws.String(key),

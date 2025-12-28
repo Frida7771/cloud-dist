@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Cloud Disk - Stop All Development Services
+# Cloud Dist - Stop All Development Services
 
 # Colors
 GREEN='\033[0;32m'
