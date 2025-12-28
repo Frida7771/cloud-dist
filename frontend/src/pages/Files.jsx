@@ -269,24 +269,35 @@ function Files() {
 
   return (
     <div className="files">
-      <div className="files-header">
-        <h2>Files</h2>
-        <div className="action-buttons">
+      <div className="files-toolbar">
+        <div className="breadcrumb">
+          {currentPath.map((path, index) => (
+            <span key={index} className="breadcrumb-item">
+              <button onClick={() => handleBreadcrumbClick(index)}>
+                {path.name}
+              </button>
+              {index < currentPath.length - 1 && <span className="separator">/</span>}
+            </span>
+          ))}
+        </div>
+        <div className="toolbar-actions">
           <button
             onClick={() => setShowUploadModal(true)}
-            className="action-btn upload-btn"
+            className="btn-primary"
           >
-            <span>📤</span> Upload File
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/>
+            </svg>
+            Upload
           </button>
           <button
             onClick={() => setShowCreateFolder(true)}
-            className="action-btn create-folder-btn"
+            className="btn-default"
           >
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ width: '18px', height: '18px', fill: 'white' }}>
-              <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
-              <path d="M10 4v4h8v-2c0-1.11-.89-2-2-2h-6l-2-2z" opacity="0.8"/>
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z" fill="currentColor"/>
             </svg>
-            Create Folder
+            New Folder
           </button>
         </div>
       </div>
@@ -300,7 +311,7 @@ function Files() {
           }
         }}>
           <div className="modal-content upload-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>📤 Upload File</h3>
+            <h3>Upload File</h3>
             
             <div className="form-group">
               <label>Select File</label>
@@ -311,7 +322,7 @@ function Files() {
               />
               {selectedFile && (
                 <div className="file-info">
-                  <span>Selected: {selectedFile.name}</span>
+                  <span>File: {selectedFile.name}</span>
                   <span>Size: {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</span>
                 </div>
               )}
@@ -335,7 +346,7 @@ function Files() {
                   ))}
               </select>
               {folders.filter(f => f.id !== 0).length === 0 && (
-                <p style={{ color: '#e74c3c', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                <p style={{ color: '#f5222d', fontSize: '0.9rem', marginTop: '0.5rem' }}>
                   No folders available. Please create a folder first.
                 </p>
               )}
@@ -352,6 +363,7 @@ function Files() {
               <button
                 onClick={handleUpload}
                 disabled={!selectedFile || uploadProgress > 0}
+                className="btn-primary"
               >
                 {uploadProgress > 0 ? 'Uploading...' : 'Upload'}
               </button>
@@ -364,6 +376,7 @@ function Files() {
                   }
                 }}
                 disabled={uploadProgress > 0}
+                className="btn-default"
               >
                 Cancel
               </button>
@@ -375,13 +388,7 @@ function Files() {
       {showCreateFolder && (
         <div className="modal-overlay" onClick={() => setShowCreateFolder(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>
-              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ width: '24px', height: '24px', fill: '#d4a574', display: 'inline-block', verticalAlign: 'middle', marginRight: '8px' }}>
-                <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
-                <path d="M10 4v4h8v-2c0-1.11-.89-2-2-2h-6l-2-2z" opacity="0.8"/>
-              </svg>
-              Create Folder
-            </h3>
+            <h3>Create Folder</h3>
             <input
               type="text"
               placeholder="Enter folder name"
@@ -393,140 +400,132 @@ function Files() {
               autoFocus
             />
             <div className="modal-actions">
-              <button onClick={handleCreateFolder}>Create</button>
+              <button onClick={handleCreateFolder} className="btn-primary">Create</button>
               <button onClick={() => {
                 setShowCreateFolder(false)
                 setNewFolderName('')
-              }}>Cancel</button>
+              }} className="btn-default">Cancel</button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="breadcrumb">
-        {currentPath.map((path, index) => (
-          <span key={index}>
-            <button onClick={() => handleBreadcrumbClick(index)}>
-              {path.name}
-            </button>
-            {index < currentPath.length - 1 && ' / '}
-          </span>
-        ))}
-      </div>
-
-      {loading ? (
-        <div className="loading">
-          <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
-          <div>Loading...</div>
-        </div>
-      ) : (
-        <div className="file-list">
-          {(() => {
-            // Root directory: only show folders
-            // Inside folder: only show files (not subfolders)
-            const isRoot = currentPath.length === 1
-            const displayItems = isRoot
-              ? files.filter(file => file.ext === '') // Only folders in root
-              : files.filter(file => file.ext !== '') // Only files inside folder
-            
-            if (displayItems.length === 0) {
+      <div className="files-container">
+        {loading ? (
+          <div className="loading">
+            <div>Loading...</div>
+          </div>
+        ) : (
+          <div className="file-table-wrapper">
+            {(() => {
+              // Root directory: only show folders
+              // Inside folder: only show files (not subfolders)
+              const isRoot = currentPath.length === 1
+              const displayItems = isRoot
+                ? files.filter(file => file.ext === '') // Only folders in root
+                : files.filter(file => file.ext !== '') // Only files inside folder
+              
+              if (displayItems.length === 0) {
+                return (
+                  <div className="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z" fill="#d9d9d9"/>
+                    </svg>
+                    <div className="empty-text">
+                      {isRoot ? 'No folders' : 'No files'}
+                    </div>
+                    <div className="empty-hint">
+                      {isRoot ? 'Click "New Folder" to get started' : 'Click "Upload" to add files'}
+                    </div>
+                  </div>
+                )
+              }
+              
               return (
-                <div className="empty">
-                  <div style={{ fontSize: '3rem', marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
-                    {isRoot ? (
-                      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ width: '64px', height: '64px' }}>
-                        <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z" fill="#d4a574"/>
-                        <path d="M10 4v4h8v-2c0-1.11-.89-2-2-2h-6l-2-2z" fill="#c49464" opacity="0.8"/>
-                      </svg>
-                    ) : (
-                      '📄'
-                    )}
-                  </div>
-                  <div>
-                    {isRoot 
-                      ? 'No folders in root directory' 
-                      : 'No files in this folder'}
-                  </div>
-                  <div style={{ fontSize: '0.9rem', color: '#adb5bd', marginTop: '0.5rem' }}>
-                    {isRoot 
-                      ? 'Create a folder to get started' 
-                      : 'Upload files to this folder'}
-                  </div>
-                </div>
-              )
-            }
-            
-            return displayItems.map((file) => (
-              <div 
-                key={file.identity} 
-                className="file-item"
-                data-type={file.ext === '' ? 'folder' : 'file'}
-              >
-                <div className="file-info">
-                  <span className="file-icon">
-                    {file.ext === '' ? (
-                      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z" fill="#d4a574"/>
-                        <path d="M10 4v4h8v-2c0-1.11-.89-2-2-2h-6l-2-2z" fill="#c49464" opacity="0.8"/>
-                      </svg>
-                    ) : (
-                      '📄'
-                    )}
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    {editingFile === file.identity ? (
-                      <input
-                        type="text"
-                        value={editFileName}
-                        onChange={(e) => setEditFileName(e.target.value)}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            handleRename(file.identity, file.name)
-                          } else if (e.key === 'Escape') {
-                            setEditingFile(null)
-                            setEditFileName('')
-                          }
-                        }}
-                        onBlur={() => handleRename(file.identity, file.name)}
-                        autoFocus
-                        className="rename-input"
-                        style={{ width: '100%' }}
-                      />
-                    ) : (
-                      <>
-                        <div className="file-name">{file.name}</div>
-                        {/* Only show size for files, not folders */}
-                        {file.ext !== '' && file.size && file.size > 0 && (
-                          <div className="file-size">
-                            {(file.size / (1024 * 1024)).toFixed(2)} MB
+                <table className="file-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '50%' }}>Name</th>
+                      <th style={{ width: '20%' }}>Size</th>
+                      <th style={{ width: '30%' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {displayItems.map((file) => (
+                      <tr key={file.identity} className="file-row">
+                        <td className="file-name-cell">
+                          <div className="file-name-wrapper">
+                            <span className="file-icon">
+                              {file.ext === '' ? (
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z" fill="#ffa940"/>
+                                </svg>
+                              ) : (
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" fill="#3385ff"/>
+                                </svg>
+                              )}
+                            </span>
+                            {editingFile === file.identity ? (
+                              <input
+                                type="text"
+                                value={editFileName}
+                                onChange={(e) => setEditFileName(e.target.value)}
+                                onKeyPress={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleRename(file.identity, file.name)
+                                  } else if (e.key === 'Escape') {
+                                    setEditingFile(null)
+                                    setEditFileName('')
+                                  }
+                                }}
+                                onBlur={() => handleRename(file.identity, file.name)}
+                                autoFocus
+                                className="rename-input"
+                              />
+                            ) : (
+                              <span 
+                                className="file-name"
+                                onClick={() => file.ext === '' && handleFolderClick(file)}
+                                style={{ cursor: file.ext === '' ? 'pointer' : 'default' }}
+                              >
+                                {file.name}
+                              </span>
+                            )}
                           </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className="file-actions">
-                  {file.ext === '' ? (
-                    <>
-                      <button onClick={() => handleFolderClick(file)}>Open</button>
-                      <button onClick={() => startRename(file)}>Rename</button>
-                      <button onClick={() => handleDelete(file.identity)}>Delete</button>
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={() => handleDownload(file.repository_identity, file.name + file.ext)}>
-                        Download
-                      </button>
-                      <button onClick={() => startRename(file)}>Rename</button>
-                      <button onClick={() => handleDelete(file.identity)}>Delete</button>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))
-          })()}
-        </div>
-      )}
+                        </td>
+                        <td className="file-size-cell">
+                          {file.ext !== '' && file.size && file.size > 0 
+                            ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+                            : '-'
+                          }
+                        </td>
+                        <td className="file-actions-cell">
+                          <div className="action-buttons">
+                            {file.ext === '' ? (
+                              <>
+                                <button onClick={() => handleFolderClick(file)} className="btn-link">Open</button>
+                                <button onClick={() => startRename(file)} className="btn-link">Rename</button>
+                                <button onClick={() => handleDelete(file.identity)} className="btn-link danger">Delete</button>
+                              </>
+                            ) : (
+                              <>
+                                <button onClick={() => handleDownload(file.repository_identity, file.name + file.ext)} className="btn-link">Download</button>
+                                <button onClick={() => startRename(file)} className="btn-link">Rename</button>
+                                <button onClick={() => handleDelete(file.identity)} className="btn-link danger">Delete</button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )
+            })()}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -220,6 +220,22 @@ type MailCodeSendPasswordUpdateRequest struct {
 type MailCodeSendPasswordUpdateReply struct {
 }
 
+type MailCodeSendPasswordResetRequest struct {
+	Email string `json:"email"`
+}
+
+type MailCodeSendPasswordResetReply struct {
+}
+
+type UserPasswordResetRequest struct {
+	Email       string `json:"email"`
+	Code        string `json:"code"`
+	NewPassword string `json:"new_password"`
+}
+
+type UserPasswordResetReply struct {
+}
+
 type UserLogoutRequest struct {
 }
 

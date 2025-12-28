@@ -42,52 +42,12 @@ function Login() {
 
   return (
     <div className="auth-container">
-      <div className="login-wrapper">
-        <div className="login-features">
-          <h1>Cloud Dist</h1>
-          <p className="tagline">Your Secure Cloud Storage Solution</p>
-          <div className="features-list">
-            <div className="feature-item">
-              <span className="feature-icon">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ width: '32px', height: '32px', fill: '#d4a574' }}>
-                  <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
-                  <path d="M10 4v4h8v-2c0-1.11-.89-2-2-2h-6l-2-2z" opacity="0.8"/>
-                </svg>
-              </span>
-              <div>
-                <h3>File Management</h3>
-                <p>Upload, organize, and manage your files with folders. Support for large files with intelligent chunked upload.</p>
-              </div>
-            </div>
-            <div className="feature-item">
-              <span className="feature-icon">🔗</span>
-              <div>
-                <h3>File Sharing</h3>
-                <p>Share files with friends through secure links with expiration control. Share directly with your friends network.</p>
-              </div>
-            </div>
-            <div className="feature-item">
-              <span className="feature-icon">👥</span>
-              <div>
-                <h3>Friend System</h3>
-                <p>Connect with friends and share files directly. Send and receive friend requests easily.</p>
-              </div>
-            </div>
-            <div className="feature-item">
-              <span className="feature-icon">💾</span>
-              <div>
-                <h3>Expandable Storage</h3>
-                <p>Start with 5GB free storage. Purchase additional capacity as you need with secure Stripe payment.</p>
-              </div>
-            </div>
-            <div className="feature-item">
-              <span className="feature-icon">🔒</span>
-              <div>
-                <h3>Secure & Fast</h3>
-                <p>Files stored on AWS S3 with xxHash64 deduplication. JWT authentication and encrypted connections.</p>
-              </div>
-            </div>
-          </div>
+      <div className="auth-wrapper">
+        <div className="auth-logo">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z" fill="#3385ff"/>
+          </svg>
+          <h1>CloudDisk</h1>
         </div>
         <div className="auth-card">
           <h2>Login</h2>
@@ -98,6 +58,7 @@ function Login() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                placeholder="Enter username"
                 required
               />
             </div>
@@ -107,13 +68,17 @@ function Login() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password"
                 required
               />
             </div>
             {error && <div className="error">{error}</div>}
-            <button type="submit" disabled={loading}>
+            <button type="submit" disabled={loading} className="btn-submit">
               {loading ? 'Logging in...' : 'Login'}
             </button>
+            <p className="auth-link">
+              <Link to="/forgot-password">Forgot password?</Link>
+            </p>
             <p className="auth-link">
               Don't have an account? <Link to="/register">Register</Link>
             </p>

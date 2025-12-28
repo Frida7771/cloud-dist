@@ -22,6 +22,8 @@ func Register(r *gin.Engine, serviceName string, svcCtx *svc.ServiceContext) {
 	r.POST("/user/logout", handler.UserLogoutHandler(svcCtx))
 	r.POST("/mail/code/send/register", handler.MailCodeSendRegisterHandler(svcCtx))
 	r.POST("/user/register", handler.UserRegisterHandler(svcCtx))
+	r.POST("/mail/code/send/password-reset", handler.MailCodeSendPasswordResetHandler(svcCtx))
+	r.POST("/user/password/reset", handler.UserPasswordResetHandler(svcCtx))
 	r.GET("/share/basic/detail", handler.ShareBasicDetailHandler(svcCtx))
 
 	// Stripe webhook (public, no auth required - Stripe verifies via signature)

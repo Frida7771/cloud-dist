@@ -41,57 +41,70 @@ function Register() {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
-        <h2>Register</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <button type="button" onClick={handleSendCode} className="code-btn">
-              Send Code
+      <div className="auth-wrapper">
+        <div className="auth-logo">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z" fill="#3385ff"/>
+          </svg>
+          <h1>CloudDisk</h1>
+        </div>
+        <div className="auth-card">
+          <h2>Register</h2>
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter email"
+                required
+              />
+              <button type="button" onClick={handleSendCode} className="code-btn" disabled={!email || codeSent}>
+                {codeSent ? 'Code Sent' : 'Send Code'}
+              </button>
+            </div>
+            <div className="form-group">
+              <label>Verification Code</label>
+              <input
+                type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="Enter verification code"
+                required
+                disabled={!codeSent}
+                maxLength={6}
+              />
+            </div>
+            <div className="form-group">
+              <label>Username</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter username"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password"
+                required
+              />
+            </div>
+            {error && <div className="error">{error}</div>}
+            <button type="submit" disabled={loading || !codeSent} className="btn-submit">
+              {loading ? 'Registering...' : 'Register'}
             </button>
-          </div>
-          <div className="form-group">
-            <label>Verification Code</label>
-            <input
-              type="text"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              required
-              disabled={!codeSent}
-            />
-          </div>
-          <div className="form-group">
-            <label>Username</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          {error && <div className="error">{error}</div>}
-          <button type="submit" disabled={loading || !codeSent}>
-            {loading ? 'Registering...' : 'Register'}
-          </button>
-          <p className="auth-link">
-            Already have an account? <Link to="/login">Login</Link>
-          </p>
-        </form>
+            <p className="auth-link">
+              Already have an account? <Link to="/login">Login</Link>
+            </p>
+          </form>
+        </div>
       </div>
     </div>
   )
