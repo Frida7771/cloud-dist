@@ -93,9 +93,11 @@ Visit `http://localhost:3000` to use the application.
 - Cache: Redis
 - Payment: Stripe
 
-## Screenshots
+## Demo
 
-![Login](./screenshots/7.jpg) ![Files](./screenshots/1.jpg) ![Share](./screenshots/3.jpg) ![Settings](./screenshots/5.jpg) ![Payment](./screenshots/6.jpg)![upload](./screenshots/8.jpg)
+
+**Watch the demo video:** [https://youtu.be/_CV4NC1YATg](https://youtu.be/_CV4NC1YATg)
+
 
 ## License
 
