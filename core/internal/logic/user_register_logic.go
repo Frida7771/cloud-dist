@@ -6,9 +6,9 @@ import (
 	"log"
 
 	"cloud-disk/core/helper"
-	"cloud-disk/core/svc"
 	"cloud-disk/core/internal/types"
 	"cloud-disk/core/models"
+	"cloud-disk/core/svc"
 )
 
 type UserRegisterLogic struct {
@@ -52,8 +52,8 @@ func (l *UserRegisterLogic) UserRegister(req *types.UserRegisterRequest) (resp *
 		Name:        req.Name,
 		Password:    hashedPassword,
 		Email:       req.Email,
-		NowVolume:   0,          // Initial used volume is 0
-		TotalVolume: 5368709120, // Default total volume 5GB (5 * 1024 * 1024 * 1024)
+		NowVolume:   0,           // Initial used volume is 0
+		TotalVolume: 16106127360, // Default total volume 15GB (15 * 1024 * 1024 * 1024)
 	}
 	if err = l.svcCtx.DB.WithContext(l.ctx).Create(user).Error; err != nil {
 		return nil, err

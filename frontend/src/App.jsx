@@ -5,7 +5,8 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
 import Files from './pages/Files'
-import Share from './pages/Share'
+import Friends from './pages/Friends'
+import ShareDetail from './pages/ShareDetail'
 import Profile from './pages/Profile'
 import Layout from './components/Layout'
 
@@ -35,6 +36,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/share/:identity" element={<ShareDetail />} />
         <Route
           path="/"
           element={
@@ -45,7 +47,7 @@ function App() {
         >
           <Route index element={<Navigate to="/files" replace />} />
           <Route path="files" element={<Files />} />
-          <Route path="share" element={<Share />} />
+          <Route path="friends" element={<Friends />} />
           <Route path="profile" element={<Profile />} />
         </Route>
         {/* Default route: redirect to login if not authenticated */}

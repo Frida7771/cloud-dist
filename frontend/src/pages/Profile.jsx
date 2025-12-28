@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { friendService } from '../services/friendService'
 import { userService } from '../services/userService'
 import { storageService, STORAGE_PLANS } from '../services/storageService'
 import './Profile.css'
@@ -154,16 +153,8 @@ function Profile() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState('info')
-  const [friends, setFriends] = useState([])
   const [loading, setLoading] = useState(false)
   const [userLoading, setUserLoading] = useState(true)
-  
-  // Add friend form
-  const [newFriendEmail, setNewFriendEmail] = useState('')
-  const [friendMessage, setFriendMessage] = useState('')
-  
-  // Friend requests
-  const [requests, setRequests] = useState([])
 
   // Storage purchase
   const [orders, setOrders] = useState([])
@@ -270,60 +261,10 @@ function Profile() {
   }
 
   useEffect(() => {
-    if (activeTab === 'friends') {
-      loadFriends()
-      loadRequests()
-    } else if (activeTab === 'storage') {
+    if (activeTab === 'storage') {
       loadOrders()
     }
   }, [activeTab, orderFilter])
-
-  const loadFriends = async () => {
-    setLoading(true)
-    try {
-      const response = await friendService.getFriends()
-      setFriends(response.data.list || [])
-    } catch (error) {
-      console.error('Failed to load friends:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const loadRequests = async () => {
-    try {
-      const response = await friendService.getFriendRequests('received')
-      setRequests(response.data.list || [])
-    } catch (error) {
-      console.error('Failed to load requests:', error)
-    }
-  }
-
-  const handleRespondRequest = async (identity, action) => {
-    try {
-      await friendService.respondFriendRequest(identity, action)
-      loadRequests()
-      loadFriends()
-    } catch (error) {
-      alert('Failed to respond to request')
-    }
-  }
-
-  const handleSendFriendRequest = async () => {
-    if (!newFriendEmail) {
-      alert('Please enter email or username')
-      return
-    }
-
-    try {
-      await friendService.sendFriendRequest(newFriendEmail, friendMessage)
-      alert('Friend request sent!')
-      setNewFriendEmail('')
-      setFriendMessage('')
-    } catch (error) {
-      alert('Failed to send friend request: ' + (error.response?.data?.error || error.message))
-    }
-  }
 
   const handlePurchaseStorage = async (storageBytes) => {
     if (!confirm(`Are you sure you want to purchase this storage plan?`)) {
@@ -400,12 +341,6 @@ function Profile() {
           Change Password
         </button>
         <button
-          className={activeTab === 'friends' ? 'active' : ''}
-          onClick={() => setActiveTab('friends')}
-        >
-          Friends
-        </button>
-        <button
           className={activeTab === 'storage' ? 'active' : ''}
           onClick={() => setActiveTab('storage')}
         >
@@ -452,87 +387,6 @@ function Profile() {
       {activeTab === 'password' && (
         <div className="tab-content">
           <PasswordChangeForm />
-        </div>
-      )}
-
-      {activeTab === 'friends' && (
-        <div className="tab-content">
-          <div className="add-friend-section">
-            <h3>Add Friend</h3>
-            <div className="add-friend-form">
-              <input
-                type="text"
-                placeholder="Enter email or username"
-                value={newFriendEmail}
-                onChange={(e) => setNewFriendEmail(e.target.value)}
-              />
-              <textarea
-                placeholder="Message (optional)"
-                value={friendMessage}
-                onChange={(e) => setFriendMessage(e.target.value)}
-                rows={2}
-              />
-              <button onClick={handleSendFriendRequest} className="add-friend-btn">
-                Send Friend Request
-              </button>
-            </div>
-          </div>
-
-          <div className="friends-section">
-            <h3>My Friends</h3>
-            {loading ? (
-              <div className="loading">Loading...</div>
-            ) : (
-              <div className="friends-list">
-                {friends.map((friend) => (
-                  <div key={friend.identity} className="friend-item">
-                    <div>
-                      <strong>{friend.user_name}</strong>
-                      <p>{friend.user_email}</p>
-                    </div>
-                  </div>
-                ))}
-                {friends.length === 0 && (
-                  <div className="empty">No friends yet</div>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="friend-requests-section" style={{ marginTop: '2rem' }}>
-            <h3>Friend Requests</h3>
-            <div className="requests-list">
-              {requests
-                .filter((r) => r.status === 'pending')
-                .map((request) => (
-                  <div key={request.identity} className="request-item">
-                    <div>
-                      <strong>{request.from_user_name}</strong>
-                      <p>{request.message || 'No message'}</p>
-                    </div>
-                    <div className="request-actions">
-                      <button
-                        onClick={() =>
-                          handleRespondRequest(request.identity, 'accept')
-                        }
-                      >
-                        Accept
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleRespondRequest(request.identity, 'reject')
-                        }
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              {requests.filter((r) => r.status === 'pending').length === 0 && (
-                <div className="empty">No pending requests</div>
-              )}
-            </div>
-          </div>
         </div>
       )}
 

@@ -131,6 +131,9 @@ function Files() {
   const [previewUrl, setPreviewUrl] = useState(null)
   const [previewContent, setPreviewContent] = useState(null)
   const [previewLoading, setPreviewLoading] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [fileToShare, setFileToShare] = useState(null)
+  const [shareLink, setShareLink] = useState('')
 
   useEffect(() => {
     loadFiles()
@@ -335,6 +338,37 @@ function Files() {
       console.error('Download failed:', error)
       alert('Download failed: ' + (error.response?.data?.error || error.message))
     }
+  }
+
+  const handleCreateShare = async (file) => {
+    if (file.ext === '') {
+      alert('Cannot share folders. Please select a file.')
+      return
+    }
+
+    try {
+      // 3 days = 3 * 24 * 60 * 60 = 259200 seconds
+      const expiredTime = 259200
+      const response = await fileService.createShare(file.identity, expiredTime)
+      const shareIdentity = response.data.identity
+      
+      // Generate share link URL
+      const shareUrl = `${window.location.origin}/share/${shareIdentity}`
+      setShareLink(shareUrl)
+      setFileToShare(file)
+      setShowShareModal(true)
+    } catch (error) {
+      console.error('Failed to create share:', error)
+      alert('Failed to create share: ' + (error.response?.data?.error || error.message))
+    }
+  }
+
+  const copyShareLink = () => {
+    navigator.clipboard.writeText(shareLink).then(() => {
+      alert('Share link copied to clipboard!')
+    }).catch(() => {
+      alert('Failed to copy link')
+    })
   }
 
   const handleFilePreview = async (file) => {
@@ -881,6 +915,50 @@ function Files() {
         </div>
       )}
 
+      {showShareModal && (
+        <div className="modal-overlay" onClick={() => {
+          setShowShareModal(false)
+          setFileToShare(null)
+          setShareLink('')
+        }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>{t('shareLink')}</h3>
+            {fileToShare && (
+              <div className="share-file-info">
+                <p><strong>{t('file')}:</strong> {fileToShare.name}{fileToShare.ext}</p>
+                <p><strong>{t('expiresIn')}:</strong> {t('threeDays')}</p>
+              </div>
+            )}
+            <div className="form-group">
+              <label>{t('shareLink')}</label>
+              <div className="share-link-input">
+                <input
+                  type="text"
+                  value={shareLink}
+                  readOnly
+                  className="share-link-text"
+                />
+                <button onClick={copyShareLink} className="btn-primary">
+                  {t('copy')}
+                </button>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button
+                onClick={() => {
+                  setShowShareModal(false)
+                  setFileToShare(null)
+                  setShareLink('')
+                }}
+                className="btn-default"
+              >
+                {t('close')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="files-container">
         {loading ? (
           <div className="loading">
@@ -987,6 +1065,7 @@ function Files() {
                             ) : (
                               <>
                                 <button onClick={() => handleDownload(file.repository_identity, file.name + file.ext)} className="btn-link">{t('download')}</button>
+                                <button onClick={() => handleCreateShare(file)} className="btn-link">{t('share')}</button>
                                 <button onClick={() => startMove(file)} className="btn-link">{t('move')}</button>
                                 <button onClick={() => startRename(file)} className="btn-link">{t('rename')}</button>
                                 <button onClick={() => handleDelete(file.identity)} className="btn-link danger">{t('delete')}</button>

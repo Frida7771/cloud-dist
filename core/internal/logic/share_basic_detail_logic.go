@@ -40,10 +40,10 @@ func (l *ShareBasicDetailLogic) ShareBasicDetail(req *types.ShareBasicDetailRequ
 		return
 	}
 
-	// Convert repository identity to download endpoint URL
-	// This provides permanent download links that don't expire
-	if resp.RepositoryIdentity != "" {
-		resp.Path = "/file/download?identity=" + resp.RepositoryIdentity
+	// Convert share identity to download endpoint URL
+	// Use share download endpoint which doesn't require user_repository check
+	if req.Identity != "" {
+		resp.Path = "/share/basic/download?identity=" + req.Identity
 	}
 
 	return

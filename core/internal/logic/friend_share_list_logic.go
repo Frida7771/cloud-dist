@@ -5,9 +5,8 @@ import (
 	"time"
 
 	"cloud-disk/core/define"
-	"cloud-disk/core/helper"
-	"cloud-disk/core/svc"
 	"cloud-disk/core/internal/types"
+	"cloud-disk/core/svc"
 )
 
 type FriendShareListLogic struct {
@@ -89,19 +88,13 @@ func (l *FriendShareListLogic) FriendShareList(req *types.FriendShareListRequest
 			CreatedAt:              r.CreatedAt,
 		}
 
-		// Generate presigned URL for friend share (valid for 3 days)
-		if r.S3Key != "" {
-			// Check if path is a URL (old format) - skip presigned URL generation
-			if len(r.S3Key) > 7 && (r.S3Key[:7] == "http://" || (len(r.S3Key) > 8 && r.S3Key[:8] == "https://")) {
-				// Old URL format, use download endpoint instead
-				item.Path = "/file/download?identity=" + r.RepositoryIdentity
-			} else {
-				// Generate presigned URL with 3 days (72 hours) expiration
-				item.Path = helper.S3PresignedURL(r.S3Key, 72)
-			}
+		// Use friend share download endpoint (no expiration, verifies friendship)
+		// This endpoint verifies that both users are friends and allows permanent access
+		if r.Identity != "" {
+			item.Path = "/friend/share/download?identity=" + r.Identity
 		} else if r.RepositoryIdentity != "" {
-			// Fallback to download endpoint if S3 key is not available
-			item.Path = "/file/download?identity=" + r.RepositoryIdentity
+			// Fallback to repository identity if share identity is not available
+			item.Path = "/friend/share/download?identity=" + r.RepositoryIdentity
 		}
 
 		// Format created_at

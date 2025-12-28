@@ -25,6 +25,7 @@ func Register(r *gin.Engine, serviceName string, svcCtx *svc.ServiceContext) {
 	r.POST("/mail/code/send/password-reset", handler.MailCodeSendPasswordResetHandler(svcCtx))
 	r.POST("/user/password/reset", handler.UserPasswordResetHandler(svcCtx))
 	r.GET("/share/basic/detail", handler.ShareBasicDetailHandler(svcCtx))
+	r.GET("/share/basic/download", handler.ShareBasicDownloadHandler(svcCtx))
 
 	// Stripe webhook (public, no auth required - Stripe verifies via signature)
 	// Note: This route uses /api prefix to match Stripe CLI forwarding path
@@ -60,6 +61,8 @@ func Register(r *gin.Engine, serviceName string, svcCtx *svc.ServiceContext) {
 		auth.POST("/friend/share/create", handler.FriendShareCreateHandler(svcCtx))
 		auth.POST("/friend/share/list", handler.FriendShareListHandler(svcCtx))
 		auth.POST("/friend/share/mark-read", handler.FriendShareMarkReadHandler(svcCtx))
+		auth.GET("/friend/share/download", handler.FriendShareDownloadHandler(svcCtx))
+		auth.POST("/friend/share/save", handler.FriendShareSaveHandler(svcCtx))
 
 		// Storage purchase endpoints
 		auth.POST("/storage/purchase/create", handler.StoragePurchaseCreateHandler(svcCtx))
