@@ -31,7 +31,7 @@ func (l *UserLoginLogic) UserLogin(req *types.LoginRequest) (resp *types.LoginRe
 		Where("name = ?", req.Name).
 		First(user).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errors.New("username or password is incorrect")
+		return nil, errors.New("user not registered")
 	}
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func (l *UserLoginLogic) UserLogin(req *types.LoginRequest) (resp *types.LoginRe
 	
 	// Verify password using bcrypt
 	if !helper.CheckPasswordHash(req.Password, user.Password) {
-		return nil, errors.New("username or password is incorrect")
+		return nil, errors.New("password incorrect")
 	}
 
 	token, err := helper.GenerateToken(int(user.ID), user.Identity, user.Name, define.TokenExpire)

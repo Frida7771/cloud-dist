@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { userService } from '../services/userService'
+import { useApp } from '../contexts/AppContext'
 import './Auth.css'
 
 function ForgotPassword() {
+  const { t } = useApp()
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -83,55 +85,55 @@ function ForgotPassword() {
           <h1>CloudDisk</h1>
         </div>
         <div className="auth-card">
-          <h2>Forgot Password</h2>
+          <h2>{t('forgotPasswordTitle')}</h2>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label>Email</label>
+              <label>{t('email')}</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder={t('email')}
                 required
                 disabled={codeSent}
               />
               {!codeSent && (
                 <button type="button" onClick={handleSendCode} className="code-btn" disabled={sendingCode || !email}>
-                  {sendingCode ? 'Sending...' : 'Send Code'}
+                  {sendingCode ? t('loading') : t('sendCode')}
                 </button>
               )}
             </div>
             {codeSent && (
               <>
                 <div className="form-group">
-                  <label>Verification Code</label>
+                  <label>{t('verificationCode')}</label>
                   <input
                     type="text"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    placeholder="Enter verification code"
+                    placeholder={t('verificationCode')}
                     required
                     maxLength={6}
                   />
                 </div>
                 <div className="form-group">
-                  <label>New Password</label>
+                  <label>{t('password')}</label>
                   <input
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Enter new password (min 6 characters)"
+                    placeholder={t('password')}
                     required
                     minLength={6}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Confirm New Password</label>
+                  <label>{t('confirmPassword')}</label>
                   <input
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm new password"
+                    placeholder={t('confirmPassword')}
                     required
                     minLength={6}
                   />
@@ -142,11 +144,11 @@ function ForgotPassword() {
             {success && <div className="success-message">{success}</div>}
             {codeSent && (
               <button type="submit" disabled={loading} className="btn-submit">
-                {loading ? 'Resetting...' : 'Reset Password'}
+                {loading ? t('loading') : t('forgotPasswordTitle')}
               </button>
             )}
             <p className="auth-link">
-              Remember your password? <Link to="/login">Login</Link>
+              {t('rememberPassword')} <Link to="/login">{t('login')}</Link>
             </p>
           </form>
         </div>

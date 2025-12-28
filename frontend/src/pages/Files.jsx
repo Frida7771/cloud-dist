@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { fileService } from '../services/fileService'
+import { useApp } from '../contexts/AppContext'
 import './Files.css'
 
 function Files() {
+  const { t } = useApp()
   const [files, setFiles] = useState([])
   const [currentPath, setCurrentPath] = useState([{ id: 0, identity: '', name: 'Root' }])
   const [loading, setLoading] = useState(false)
@@ -288,7 +290,7 @@ function Files() {
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/>
             </svg>
-            Upload
+            {t('upload')}
           </button>
           <button
             onClick={() => setShowCreateFolder(true)}
@@ -297,7 +299,7 @@ function Files() {
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z" fill="currentColor"/>
             </svg>
-            New Folder
+            {t('newFolder')}
           </button>
         </div>
       </div>
@@ -311,10 +313,10 @@ function Files() {
           }
         }}>
           <div className="modal-content upload-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Upload File</h3>
+            <h3>{t('uploadFile')}</h3>
             
             <div className="form-group">
-              <label>Select File</label>
+              <label>{t('selectFile')}</label>
               <input
                 type="file"
                 onChange={handleFileSelect}
@@ -329,14 +331,14 @@ function Files() {
             </div>
 
             <div className="form-group">
-              <label>Upload To Folder (Required)</label>
+              <label>{t('uploadToFolder')}</label>
               <select
                 value={selectedFolderId || ''}
                 onChange={(e) => setSelectedFolderId(e.target.value ? Number(e.target.value) : null)}
                 disabled={uploadProgress > 0}
                 required
               >
-                <option value="">-- Select a folder --</option>
+                <option value="">-- {t('selectFolder')} --</option>
                 {folders
                   .filter(folder => folder.id !== 0) // Exclude root directory
                   .map((folder, index) => (
@@ -365,7 +367,7 @@ function Files() {
                 disabled={!selectedFile || uploadProgress > 0}
                 className="btn-primary"
               >
-                {uploadProgress > 0 ? 'Uploading...' : 'Upload'}
+                {uploadProgress > 0 ? t('uploading') : t('upload')}
               </button>
               <button
                 onClick={() => {
@@ -378,7 +380,7 @@ function Files() {
                 disabled={uploadProgress > 0}
                 className="btn-default"
               >
-                Cancel
+                {t('cancel')}
               </button>
             </div>
           </div>
@@ -388,10 +390,10 @@ function Files() {
       {showCreateFolder && (
         <div className="modal-overlay" onClick={() => setShowCreateFolder(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Create Folder</h3>
+            <h3>{t('newFolder')}</h3>
             <input
               type="text"
-              placeholder="Enter folder name"
+              placeholder={t('newFolder')}
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
               onKeyPress={(e) => {
@@ -400,11 +402,11 @@ function Files() {
               autoFocus
             />
             <div className="modal-actions">
-              <button onClick={handleCreateFolder} className="btn-primary">Create</button>
+              <button onClick={handleCreateFolder} className="btn-primary">{t('create')}</button>
               <button onClick={() => {
                 setShowCreateFolder(false)
                 setNewFolderName('')
-              }} className="btn-default">Cancel</button>
+              }} className="btn-default">{t('cancel')}</button>
             </div>
           </div>
         </div>
@@ -413,7 +415,7 @@ function Files() {
       <div className="files-container">
         {loading ? (
           <div className="loading">
-            <div>Loading...</div>
+            <div>{t('loading')}</div>
           </div>
         ) : (
           <div className="file-table-wrapper">
@@ -432,10 +434,10 @@ function Files() {
                       <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z" fill="#d9d9d9"/>
                     </svg>
                     <div className="empty-text">
-                      {isRoot ? 'No folders' : 'No files'}
+                      {isRoot ? t('noFolders') : t('noFiles')}
                     </div>
                     <div className="empty-hint">
-                      {isRoot ? 'Click "New Folder" to get started' : 'Click "Upload" to add files'}
+                      {isRoot ? t('clickNewFolder') : t('clickUpload')}
                     </div>
                   </div>
                 )
@@ -445,9 +447,9 @@ function Files() {
                 <table className="file-table">
                   <thead>
                     <tr>
-                      <th style={{ width: '50%' }}>Name</th>
-                      <th style={{ width: '20%' }}>Size</th>
-                      <th style={{ width: '30%' }}>Actions</th>
+                      <th style={{ width: '50%' }}>{t('name')}</th>
+                      <th style={{ width: '20%' }}>{t('size')}</th>
+                      <th style={{ width: '30%' }}>{t('actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -504,15 +506,15 @@ function Files() {
                           <div className="action-buttons">
                             {file.ext === '' ? (
                               <>
-                                <button onClick={() => handleFolderClick(file)} className="btn-link">Open</button>
-                                <button onClick={() => startRename(file)} className="btn-link">Rename</button>
-                                <button onClick={() => handleDelete(file.identity)} className="btn-link danger">Delete</button>
+                                <button onClick={() => handleFolderClick(file)} className="btn-link">{t('open')}</button>
+                                <button onClick={() => startRename(file)} className="btn-link">{t('rename')}</button>
+                                <button onClick={() => handleDelete(file.identity)} className="btn-link danger">{t('delete')}</button>
                               </>
                             ) : (
                               <>
-                                <button onClick={() => handleDownload(file.repository_identity, file.name + file.ext)} className="btn-link">Download</button>
-                                <button onClick={() => startRename(file)} className="btn-link">Rename</button>
-                                <button onClick={() => handleDelete(file.identity)} className="btn-link danger">Delete</button>
+                                <button onClick={() => handleDownload(file.repository_identity, file.name + file.ext)} className="btn-link">{t('download')}</button>
+                                <button onClick={() => startRename(file)} className="btn-link">{t('rename')}</button>
+                                <button onClick={() => handleDelete(file.identity)} className="btn-link danger">{t('delete')}</button>
                               </>
                             )}
                           </div>

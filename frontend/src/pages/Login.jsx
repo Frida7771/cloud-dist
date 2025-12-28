@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useApp } from '../contexts/AppContext'
 import './Auth.css'
 
 function Login() {
@@ -9,6 +10,7 @@ function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
+  const { t } = useApp()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
@@ -30,12 +32,20 @@ function Login() {
           navigate('/files', { replace: true })
         }, 100)
       } else {
-        setError(result.error || 'Login failed')
+        // Map backend error messages to translated messages
+        const errorMsg = result.error || ''
+        if (errorMsg.includes('user not registered') || errorMsg.includes('用户未注册')) {
+          setError(t('userNotRegistered'))
+        } else if (errorMsg.includes('password incorrect') || errorMsg.includes('密码错误')) {
+          setError(t('passwordIncorrect'))
+        } else {
+          setError(errorMsg || t('loginFailed'))
+        }
         setLoading(false)
       }
     } catch (err) {
       console.error('Login error:', err)
-      setError('Login failed: ' + (err.message || 'Unknown error'))
+      setError(t('loginFailed') + ': ' + (err.message || 'Unknown error'))
       setLoading(false)
     }
   }
@@ -50,37 +60,37 @@ function Login() {
           <h1>CloudDisk</h1>
         </div>
         <div className="auth-card">
-          <h2>Login</h2>
+          <h2>{t('loginTitle')}</h2>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label>Username</label>
+              <label>{t('username')}</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter username"
+                placeholder={t('username')}
                 required
               />
             </div>
             <div className="form-group">
-              <label>Password</label>
+              <label>{t('password')}</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
+                placeholder={t('password')}
                 required
               />
             </div>
             {error && <div className="error">{error}</div>}
             <button type="submit" disabled={loading} className="btn-submit">
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? t('loggingIn') : t('login')}
             </button>
             <p className="auth-link">
-              <Link to="/forgot-password">Forgot password?</Link>
+              <Link to="/forgot-password">{t('forgotPassword')}?</Link>
             </p>
             <p className="auth-link">
-              Don't have an account? <Link to="/register">Register</Link>
+              {t('dontHaveAccount')} <Link to="/register">{t('register')}</Link>
             </p>
           </form>
         </div>

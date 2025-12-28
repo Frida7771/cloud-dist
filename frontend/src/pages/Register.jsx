@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useApp } from '../contexts/AppContext'
 import './Auth.css'
 
 function Register() {
+  const { t } = useApp()
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
@@ -49,59 +51,59 @@ function Register() {
           <h1>CloudDisk</h1>
         </div>
         <div className="auth-card">
-          <h2>Register</h2>
+          <h2>{t('registerTitle')}</h2>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label>Email</label>
+              <label>{t('email')}</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter email"
+                placeholder={t('email')}
                 required
               />
               <button type="button" onClick={handleSendCode} className="code-btn" disabled={!email || codeSent}>
-                {codeSent ? 'Code Sent' : 'Send Code'}
+                {codeSent ? t('codeSent') : t('sendCode')}
               </button>
             </div>
             <div className="form-group">
-              <label>Verification Code</label>
+              <label>{t('verificationCode')}</label>
               <input
                 type="text"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                placeholder="Enter verification code"
+                placeholder={t('verificationCode')}
                 required
                 disabled={!codeSent}
                 maxLength={6}
               />
             </div>
             <div className="form-group">
-              <label>Username</label>
+              <label>{t('username')}</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter username"
+                placeholder={t('username')}
                 required
               />
             </div>
             <div className="form-group">
-              <label>Password</label>
+              <label>{t('password')}</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
+                placeholder={t('password')}
                 required
               />
             </div>
             {error && <div className="error">{error}</div>}
             <button type="submit" disabled={loading || !codeSent} className="btn-submit">
-              {loading ? 'Registering...' : 'Register'}
+              {loading ? t('registering') : t('register')}
             </button>
             <p className="auth-link">
-              Already have an account? <Link to="/login">Login</Link>
+              {t('alreadyHaveAccount')} <Link to="/login">{t('login')}</Link>
             </p>
           </form>
         </div>

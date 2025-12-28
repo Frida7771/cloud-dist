@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { AppProvider } from './contexts/AppContext'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
@@ -28,8 +29,9 @@ function PrivateRoute({ children }) {
 
 function App() {
   return (
-    <AuthProvider>
-      <Routes>
+    <AppProvider>
+      <AuthProvider>
+        <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -49,7 +51,8 @@ function App() {
         {/* Default route: redirect to login if not authenticated */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
-    </AuthProvider>
+      </AuthProvider>
+    </AppProvider>
   )
 }
 
