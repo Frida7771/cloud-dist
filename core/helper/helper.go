@@ -369,3 +369,25 @@ func S3Download(key string) (io.ReadCloser, *s3.HeadObjectOutput, error) {
 
 	return getResp.Body, headResp, nil
 }
+
+// S3Delete deletes a file from S3
+func S3Delete(key string) error {
+	ctx := context.Background()
+	client, err := getS3Client(ctx)
+	if err != nil {
+		log.Printf("[S3Delete] Failed to create S3 client: %v", err)
+		return err
+	}
+
+	_, err = client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(define.S3Bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		log.Printf("[S3Delete] Failed to delete object from S3: %v, key=%s", err, key)
+		return err
+	}
+
+	log.Printf("[S3Delete] Successfully deleted object from S3: key=%s", key)
+	return nil
+}
