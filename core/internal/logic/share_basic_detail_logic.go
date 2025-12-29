@@ -53,13 +53,17 @@ func (l *ShareBasicDetailLogic) ShareBasicDetail(req *types.ShareBasicDetailRequ
 		return
 	}
 
-	// Generate presigned URL for direct access
+	// Generate presigned URLs for preview and download
 	// Presigned URL expiration should match share link expiration (3 days = 72 hours)
 	// This allows preview and download without going through backend
 	if resp.Path != "" {
-		// Path is S3 key, generate presigned URL
-		// 3 days = 72 hours expiration for presigned URL (matches share link expiration)
-		resp.Path = helper.S3PresignedURL(resp.Path, 72)
+		// Path is S3 key
+		s3Key := resp.Path
+		// Generate presigned URL for preview (no Content-Disposition)
+		resp.Path = helper.S3PresignedURL(s3Key, 72)
+		// Generate presigned URL for download (with Content-Disposition: attachment)
+		fileName := resp.Name + resp.Ext
+		resp.DownloadUrl = helper.S3PresignedURLWithDisposition(s3Key, 72, fileName)
 	}
 
 	return

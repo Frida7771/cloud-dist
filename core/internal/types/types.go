@@ -74,7 +74,8 @@ type ShareBasicDetailReply struct {
 	Name               string `json:"name"`
 	Ext                string `json:"ext"`
 	Size               int64  `json:"size"`
-	Path               string `json:"path"`
+	Path               string `json:"path"`         // Presigned URL for preview
+	DownloadUrl        string `json:"download_url"` // Presigned URL for download (with Content-Disposition: attachment)
 }
 
 type ShareBasicCreateRequest struct {

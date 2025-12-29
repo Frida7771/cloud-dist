@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useApp } from '../contexts/AppContext'
 import './Auth.css'
@@ -12,6 +12,7 @@ function Login() {
   const { login } = useAuth()
   const { t } = useApp()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -29,7 +30,9 @@ function Login() {
         
         // Small delay to ensure token is set and state is updated
         setTimeout(() => {
-          navigate('/files', { replace: true })
+          // Check if there's a return path from location state
+          const returnTo = location.state?.returnTo || '/files'
+          navigate(returnTo, { replace: true })
         }, 100)
       } else {
         // Map backend error messages to translated messages
