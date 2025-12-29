@@ -96,7 +96,7 @@ Visit `http://localhost:3000` to use the application.
 ## Demo
 
 
-**Watch the demo video:** [https://youtu.be/_CV4NC1YATg](https://youtu.be/_CV4NC1YATg)
+**Watch the demo video:** [https://youtu.be/1Syovw1chCE](https://youtu.be/1Syovw1chCE)
 
 
 ## License
