@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useApp } from '../contexts/AppContext'
 import './Layout.css'
@@ -7,10 +7,20 @@ function Layout() {
   const { user, logout } = useAuth()
   const { t, language, theme, toggleLanguage, toggleTheme } = useApp()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const handleLogout = async () => {
     await logout()
     navigate('/login')
+  }
+
+  const handleMyFilesClick = (e) => {
+    if (location.pathname === '/files') {
+      // 如果已经在/files页面，触发重置到Root的事件
+      e.preventDefault()
+      window.dispatchEvent(new CustomEvent('resetFilesToRoot'))
+    }
+    // 如果不在/files页面，NavLink会正常导航
   }
 
   return (
@@ -48,7 +58,11 @@ function Layout() {
       <div className="layout-body">
         <aside className="sidebar">
           <nav className="sidebar-nav">
-            <NavLink to="/files" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+            <NavLink 
+              to="/files" 
+              className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}
+              onClick={handleMyFilesClick}
+            >
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z" fill="currentColor"/>
               </svg>

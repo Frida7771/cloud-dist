@@ -161,8 +161,10 @@ type UserFileSearchItem struct {
 	Name               string `json:"name"`
 	Size               int64  `json:"size"`
 	CreatedAt          string `json:"created_at"`
-	Path               string `json:"path"`        // Download URL
-	ParentPath         string `json:"parent_path"` // Full folder path
+	Path               string `json:"path"`            // Download URL
+	ParentPath         string `json:"parent_path"`     // Full folder path
+	ParentId           int64  `json:"parent_id"`       // Parent folder ID
+	ParentIdentity     string `json:"parent_identity"` // Parent folder identity
 }
 
 type UserFolderListRequest struct {

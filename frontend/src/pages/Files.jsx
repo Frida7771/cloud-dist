@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import { fileService } from '../services/fileService'
 import { useApp } from '../contexts/AppContext'
 import './Files.css'
@@ -111,6 +112,7 @@ const FileIcon = ({ ext }) => {
 
 function Files() {
   const { t } = useApp()
+  const location = useLocation()
   const [files, setFiles] = useState([])
   const [currentPath, setCurrentPath] = useState([{ id: 0, identity: '', name: 'Root' }])
   const [loading, setLoading] = useState(false)
@@ -142,6 +144,34 @@ function Files() {
   const [searchCount, setSearchCount] = useState(0)
   const [searchFocused, setSearchFocused] = useState(false)
   const searchTimeoutRef = useRef(null)
+  const previousLocationRef = useRef(location.pathname)
+
+  // 监听路由变化，当从其他页面进入/files时重置到Root
+  useEffect(() => {
+    if (location.pathname === '/files' && previousLocationRef.current !== '/files') {
+      // 从其他页面进入/files页面，重置到Root
+      setCurrentPath([{ id: 0, identity: '', name: 'Root' }])
+      setSearchKeyword('')
+      setSearchResults([])
+      setSearchCount(0)
+    }
+    previousLocationRef.current = location.pathname
+  }, [location.pathname])
+
+  // 监听自定义事件，当点击My Files导航时重置到Root
+  useEffect(() => {
+    const handleResetToRoot = () => {
+      setCurrentPath([{ id: 0, identity: '', name: 'Root' }])
+      setSearchKeyword('')
+      setSearchResults([])
+      setSearchCount(0)
+    }
+
+    window.addEventListener('resetFilesToRoot', handleResetToRoot)
+    return () => {
+      window.removeEventListener('resetFilesToRoot', handleResetToRoot)
+    }
+  }, [])
 
   useEffect(() => {
     if (searchKeyword.trim() === '') {
@@ -680,6 +710,78 @@ function Files() {
 
   const handleFolderClick = (folder) => {
     setCurrentPath([...currentPath, { id: folder.id, identity: folder.identity, name: folder.name }])
+  }
+
+  const navigateToFileFolder = async (file) => {
+    // 清空搜索
+    setSearchKeyword('')
+    setSearchResults([])
+    setSearchCount(0)
+    
+    if (!file.parent_id || file.parent_id === 0) {
+      // 文件在 Root，直接导航到 Root
+      setCurrentPath([{ id: 0, identity: '', name: 'Root' }])
+      return
+    }
+
+    // 根据 parent_path 字符串解析路径并构建导航路径
+    try {
+      if (!file.parent_path || file.parent_path === 'Root') {
+        setCurrentPath([{ id: 0, identity: '', name: 'Root' }])
+        return
+      }
+
+      // 解析 parent_path，例如 "Root/folder1/folder2" -> ["Root", "folder1", "folder2"]
+      const pathParts = file.parent_path.split('/').filter(part => part.trim() !== '')
+      
+      if (pathParts.length === 0 || (pathParts.length === 1 && pathParts[0] === 'Root')) {
+        setCurrentPath([{ id: 0, identity: '', name: 'Root' }])
+        return
+      }
+
+      // 构建路径：从 Root 开始，逐个查找每个文件夹
+      const path = [{ id: 0, identity: '', name: 'Root' }]
+      let currentParentIdentity = '' // 从 Root 开始
+      
+      // 跳过 "Root"，从第一个文件夹开始
+      for (let i = 1; i < pathParts.length; i++) {
+        const folderName = pathParts[i]
+        
+        try {
+          // 查询当前父文件夹下的文件列表
+          const fileListResponse = await fileService.getFileList(currentParentIdentity)
+          const items = fileListResponse.data.list || []
+          
+          // 查找匹配名称的文件夹
+          const folder = items.find(item => 
+            item.ext === '' && 
+            item.name === folderName
+          )
+          
+          if (folder) {
+            path.push({ 
+              id: folder.id, 
+              identity: folder.identity, 
+              name: folder.name 
+            })
+            currentParentIdentity = folder.identity
+          } else {
+            // 如果找不到文件夹，停止构建路径
+            console.warn(`Folder "${folderName}" not found in path "${file.parent_path}"`)
+            break
+          }
+        } catch (error) {
+          console.error(`Failed to query folder "${folderName}":`, error)
+          break
+        }
+      }
+      
+      setCurrentPath(path)
+    } catch (error) {
+      console.error('Failed to navigate to folder:', error)
+      // 出错时导航到 Root
+      setCurrentPath([{ id: 0, identity: '', name: 'Root' }])
+    }
   }
 
   const handleBreadcrumbClick = (index) => {
@@ -1324,7 +1426,6 @@ function Files() {
                     <th className="file-size-cell">{t('size')}</th>
                     <th className="file-time-cell">{t('uploadTime')}</th>
                     <th className="file-path-cell">{t('location') || 'Location'}</th>
-                    <th className="file-actions-cell">{t('actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1335,7 +1436,11 @@ function Files() {
                           <div className="file-icon-small">
                             <FileIcon ext={file.ext || ''} />
                           </div>
-                          <span>
+                          <span 
+                            className="file-name"
+                            onClick={() => navigateToFileFolder(file)}
+                            style={{ cursor: 'pointer' }}
+                          >
                             {highlightSearchText(file.name, searchKeyword)}
                             {file.ext && highlightSearchText(file.ext, searchKeyword)}
                           </span>
@@ -1345,13 +1450,6 @@ function Files() {
                       <td className="file-time-cell">{formatDateTime(file.created_at)}</td>
                       <td className="file-path-cell">
                         <span className="file-path" title={file.parent_path}>{file.parent_path}</span>
-                      </td>
-                      <td className="file-actions-cell">
-                        <div className="action-buttons">
-                          <button onClick={() => handleDownload(file.repository_identity, file.name + file.ext)} className="btn-link">{t('download')}</button>
-                          <button onClick={() => handleCreateShare({ identity: file.identity, name: file.name, ext: file.ext })} className="btn-link">{t('share')}</button>
-                          <button onClick={() => handleFilePreview({ ...file, repository_identity: file.repository_identity })} className="btn-link">{t('preview')}</button>
-                        </div>
                       </td>
                     </tr>
                   ))}
@@ -1474,15 +1572,19 @@ function Files() {
                             {file.ext === '' ? (
                               <>
                                 <button onClick={() => startMove(file)} className="btn-link">{t('move')}</button>
+                                <span className="action-separator"></span>
                                 <button onClick={() => startRename(file)} className="btn-link">{t('rename')}</button>
+                                <span className="action-separator"></span>
                                 <button onClick={() => handleDelete(file.identity)} className="btn-link danger">{t('delete')}</button>
                               </>
                             ) : (
                               <>
-                                <button onClick={() => handleDownload(file.repository_identity, file.name + file.ext)} className="btn-link">{t('download')}</button>
                                 <button onClick={() => handleCreateShare(file)} className="btn-link">{t('share')}</button>
+                                <span className="action-separator"></span>
                                 <button onClick={() => startMove(file)} className="btn-link">{t('move')}</button>
+                                <span className="action-separator"></span>
                                 <button onClick={() => startRename(file)} className="btn-link">{t('rename')}</button>
+                                <span className="action-separator"></span>
                                 <button onClick={() => handleDelete(file.identity)} className="btn-link danger">{t('delete')}</button>
                               </>
                             )}

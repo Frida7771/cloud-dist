@@ -118,6 +118,7 @@ func (l *UserFileSearchLogic) UserFileSearch(req *types.UserFileSearchRequest, u
 			Name:               r.Name,
 			Size:               r.Size,
 			CreatedAt:          r.CreatedAt.Format(define.Datetime),
+			ParentId:           r.ParentId,
 		}
 
 		if r.RepositoryIdentity != "" {
@@ -130,8 +131,19 @@ func (l *UserFileSearchLogic) UserFileSearch(req *types.UserFileSearchRequest, u
 			} else {
 				item.ParentPath = l.getParentPath(r.ParentId, userIdentity, parentPathMap)
 			}
+			
+			// Get parent folder identity
+			var parentFolder models.UserRepository
+			err := l.svcCtx.DB.WithContext(l.ctx).
+				Select("identity").
+				Where("id = ? AND user_identity = ?", r.ParentId, userIdentity).
+				First(&parentFolder).Error
+			if err == nil {
+				item.ParentIdentity = parentFolder.Identity
+			}
 		} else {
 			item.ParentPath = "Root"
+			item.ParentIdentity = ""
 		}
 
 		resp.List = append(resp.List, item)
