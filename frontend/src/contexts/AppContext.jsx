@@ -30,6 +30,15 @@ const translations = {
     loading: 'Loading...',
     error: 'Error',
     success: 'Success',
+    search: 'Search',
+    searchFiles: 'Search files...',
+    searching: 'Searching...',
+    clear: 'Clear',
+    allFiles: 'All Files',
+    searchResults: 'Found',
+    files: 'files',
+    noSearchResults: 'No files found matching your search.',
+    location: 'Location',
     
     // Auth
     loginTitle: 'Login',
@@ -182,6 +191,15 @@ const translations = {
     loading: '加载中...',
     error: '错误',
     success: '成功',
+    search: '搜索',
+    searchFiles: '搜索文件...',
+    searching: '搜索中...',
+    clear: '清除',
+    allFiles: '所有文件',
+    searchResults: '找到',
+    files: '个文件',
+    noSearchResults: '没有找到匹配的文件。',
+    location: '位置',
     
     // Auth
     loginTitle: '登录',

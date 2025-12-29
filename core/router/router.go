@@ -40,6 +40,7 @@ func Register(r *gin.Engine, serviceName string, svcCtx *svc.ServiceContext) {
 		auth.GET("/file/download", handler.FileDownloadHandler(svcCtx))
 		auth.POST("/user/repository/save", handler.UserRepositorySaveHandler(svcCtx))
 		auth.POST("/user/file/list", handler.UserFileListHandler(svcCtx))
+		auth.POST("/user/file/search", handler.UserFileSearchHandler(svcCtx))
 		auth.POST("/user/folder/list", handler.UserFolderListHandler(svcCtx))
 		auth.POST("/user/file/name/update", handler.UserFileNameUpdateHandler(svcCtx))
 		auth.POST("/user/folder/create", handler.UserFolderCreateHandler(svcCtx))

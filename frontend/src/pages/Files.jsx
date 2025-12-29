@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { fileService } from '../services/fileService'
 import { useApp } from '../contexts/AppContext'
 import './Files.css'
@@ -136,10 +136,64 @@ function Files() {
   const [showShareModal, setShowShareModal] = useState(false)
   const [fileToShare, setFileToShare] = useState(null)
   const [shareLink, setShareLink] = useState('')
+  const [searchKeyword, setSearchKeyword] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchCount, setSearchCount] = useState(0)
+  const [searchFocused, setSearchFocused] = useState(false)
+  const searchTimeoutRef = useRef(null)
 
   useEffect(() => {
-    loadFiles()
+    if (searchKeyword.trim() === '') {
+      // If no search keyword, load normal file list
+      loadFiles()
+      setSearchResults([])
+      setSearchCount(0)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPath])
+
+  // 实时搜索（防抖处理）
+  useEffect(() => {
+    const keyword = searchKeyword.trim()
+    
+    if (keyword === '') {
+      // 清除之前的定时器
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+        searchTimeoutRef.current = null
+      }
+      // 重置搜索状态
+      setIsSearching(false)
+      setSearchResults([])
+      setSearchCount(0)
+      if (currentPath.length > 0) {
+        loadFiles()
+      }
+      return
+    }
+
+    // 清除之前的定时器
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+
+    // 设置新的定时器，500ms 后执行搜索
+    setIsSearching(true)
+    const timeoutId = setTimeout(() => {
+      handleSearch()
+    }, 500)
+    
+    searchTimeoutRef.current = timeoutId
+
+    // 清理函数
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchKeyword])
 
   useEffect(() => {
     if (showUploadModal) {
@@ -738,6 +792,92 @@ function Files() {
     }
   }
 
+  const handleSearch = async () => {
+    const keyword = searchKeyword.trim()
+    if (!keyword) {
+      setSearchResults([])
+      setSearchCount(0)
+      loadFiles()
+      return
+    }
+
+    setIsSearching(true)
+    try {
+      const response = await fileService.searchFiles(keyword, '')
+      setSearchResults(response.data.list || [])
+      setSearchCount(response.data.count || 0)
+    } catch (error) {
+      console.error('Search failed:', error)
+      alert('Search failed: ' + (error.response?.data?.error || error.message))
+      setSearchResults([])
+      setSearchCount(0)
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      // 清除防抖定时器，立即搜索
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+      handleSearch()
+    } else if (e.key === 'Escape') {
+      clearSearch()
+      e.target.blur()
+    }
+  }
+
+  const highlightSearchText = (text, keyword) => {
+    if (!keyword || !text) return text
+    const regex = new RegExp(`(${keyword})`, 'gi')
+    const parts = text.split(regex)
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <mark key={index} className="search-highlight">{part}</mark>
+      ) : (
+        part
+      )
+    )
+  }
+
+  const clearSearch = () => {
+    // 清除定时器
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+      searchTimeoutRef.current = null
+    }
+    setSearchKeyword('')
+    setIsSearching(false)
+    setSearchResults([])
+    setSearchCount(0)
+    loadFiles()
+  }
+
+  const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return '0 B'
+    const k = 1024
+    const sizes = ['B', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
+  }
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return '-'
+    try {
+      const date = new Date(dateString)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      return `${year}-${month}-${day} ${hours}:${minutes}`
+    } catch (e) {
+      return dateString
+    }
+  }
+
   return (
     <div className="files">
       <div className="files-toolbar">
@@ -752,6 +892,40 @@ function Files() {
           ))}
         </div>
         <div className="toolbar-actions">
+          <div className={`search-bar ${searchFocused ? 'focused' : ''} ${searchKeyword ? 'has-value' : ''}`}>
+            {isSearching && (
+              <div className="search-loading-spinner">
+                <svg className="spinner" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray="32" strokeDashoffset="32">
+                    <animate attributeName="stroke-dasharray" dur="2s" values="0 32;16 16;0 32;0 32" repeatCount="indefinite"/>
+                    <animate attributeName="stroke-dashoffset" dur="2s" values="0;-16;-32;-32" repeatCount="indefinite"/>
+                  </circle>
+                </svg>
+              </div>
+            )}
+            <input
+              type="text"
+              placeholder={t('searchFiles') || 'Search files...'}
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              onKeyPress={handleSearchKeyPress}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
+              className="search-input"
+            />
+            {searchKeyword && (
+              <button 
+                onClick={clearSearch} 
+                className="btn-icon clear-search-btn" 
+                title={t('clear') || 'Clear'}
+                onMouseDown={(e) => e.preventDefault()}
+              >
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+                </svg>
+              </button>
+            )}
+          </div>
           <button
             onClick={() => setShowUploadModal(true)}
             className="btn-primary"
@@ -763,7 +937,7 @@ function Files() {
           </button>
           <button
             onClick={() => setShowCreateFolder(true)}
-            className="btn-default"
+            className="btn-primary"
           >
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z" fill="currentColor"/>
@@ -1100,14 +1274,100 @@ function Files() {
         </div>
       )}
 
+      {(searchKeyword || searchCount > 0) && (
+        <div className="search-results-header">
+          <div className="search-results-count">
+            {isSearching ? (
+              <span className="search-status">
+                <span className="search-status-icon">🔍</span>
+                {t('searching') || 'Searching...'}
+              </span>
+            ) : searchCount > 0 ? (
+              <>
+                <span className="search-status-icon">✓</span>
+                {t('searchResults') || 'Found'} <strong>{searchCount}</strong> {t('files') || 'files'}
+                {searchKeyword && (
+                  <span className="search-keyword"> for "<strong>{searchKeyword}</strong>"</span>
+                )}
+              </>
+            ) : searchKeyword ? (
+              <>
+                <span className="search-status-icon">✗</span>
+                {t('noSearchResults') || 'No files found'}
+                {searchKeyword && (
+                  <span className="search-keyword"> for "<strong>{searchKeyword}</strong>"</span>
+                )}
+              </>
+            ) : null}
+          </div>
+          {searchKeyword && (
+            <button onClick={clearSearch} className="btn-link clear-search-link">
+              {t('clearSearch') || 'Clear search'}
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="files-container">
-        {loading ? (
+        {loading || isSearching ? (
           <div className="loading">
-            <div>{t('loading')}</div>
+            <div>{isSearching ? (t('searching') || 'Searching...') : t('loading')}</div>
           </div>
         ) : (
           <div className="file-table-wrapper">
-            {(() => {
+            {searchResults.length > 0 ? (
+              // Show search results
+              <table className="files-table">
+                <thead>
+                  <tr>
+                    <th className="file-name-cell">{t('name')}</th>
+                    <th className="file-size-cell">{t('size')}</th>
+                    <th className="file-time-cell">{t('uploadTime')}</th>
+                    <th className="file-path-cell">{t('location') || 'Location'}</th>
+                    <th className="file-actions-cell">{t('actions')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {searchResults.map((file) => (
+                    <tr key={file.identity}>
+                      <td className="file-name-cell">
+                        <div className="file-name-wrapper">
+                          <div className="file-icon-small">
+                            <FileIcon ext={file.ext || ''} />
+                          </div>
+                          <span>
+                            {highlightSearchText(file.name, searchKeyword)}
+                            {file.ext && highlightSearchText(file.ext, searchKeyword)}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="file-size-cell">{formatFileSize(file.size)}</td>
+                      <td className="file-time-cell">{formatDateTime(file.created_at)}</td>
+                      <td className="file-path-cell">
+                        <span className="file-path" title={file.parent_path}>{file.parent_path}</span>
+                      </td>
+                      <td className="file-actions-cell">
+                        <div className="action-buttons">
+                          <button onClick={() => handleDownload(file.repository_identity, file.name + file.ext)} className="btn-link">{t('download')}</button>
+                          <button onClick={() => handleCreateShare({ identity: file.identity, name: file.name, ext: file.ext })} className="btn-link">{t('share')}</button>
+                          <button onClick={() => handleFilePreview({ ...file, repository_identity: file.repository_identity })} className="btn-link">{t('preview')}</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : searchKeyword.trim() ? (
+              // No search results
+              <div className="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="#d9d9d9"/>
+                </svg>
+                <div className="empty-text">
+                  {t('noSearchResults') || 'No files found matching your search.'}
+                </div>
+              </div>
+            ) : (() => {
               // Root directory: only show folders
               // Inside folder: show both files and subfolders
               const isRoot = currentPath.length === 1
@@ -1131,22 +1391,6 @@ function Files() {
                 )
               }
               
-              // Format date function
-              const formatDateTime = (dateString) => {
-                if (!dateString) return '-'
-                try {
-                  const date = new Date(dateString)
-                  const year = date.getFullYear()
-                  const month = String(date.getMonth() + 1).padStart(2, '0')
-                  const day = String(date.getDate()).padStart(2, '0')
-                  const hours = String(date.getHours()).padStart(2, '0')
-                  const minutes = String(date.getMinutes()).padStart(2, '0')
-                  return `${year}-${month}-${day} ${hours}:${minutes}`
-                } catch (e) {
-                  return dateString
-                }
-              }
-
               // Check if current folder only contains folders (no files)
               const hasOnlyFolders = displayItems.length > 0 && displayItems.every(item => item.ext === '')
               
@@ -1207,7 +1451,7 @@ function Files() {
                                 }}
                                 style={{ cursor: (file.ext === '' || canPreview(file.ext)) ? 'pointer' : 'default' }}
                               >
-                                {file.name}
+                                {searchKeyword ? highlightSearchText(file.name, searchKeyword) : file.name}
                               </span>
                             )}
                           </div>

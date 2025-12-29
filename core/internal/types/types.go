@@ -141,6 +141,30 @@ type UserFile struct {
 	CreatedAt          string `json:"created_at"`
 }
 
+type UserFileSearchRequest struct {
+	Keyword  string `json:"keyword"`
+	FileType string `json:"file_type,optional"` // File extension filter, e.g., ".pdf", ".jpg"
+	Page     int    `json:"page,optional"`
+	Size     int    `json:"size,optional"`
+}
+
+type UserFileSearchReply struct {
+	List  []*UserFileSearchItem `json:"list"`
+	Count int64                 `json:"count"`
+}
+
+type UserFileSearchItem struct {
+	ID                 int64  `json:"id"`
+	Identity           string `json:"identity"`
+	RepositoryIdentity string `json:"repository_identity"`
+	Ext                string `json:"ext"`
+	Name               string `json:"name"`
+	Size               int64  `json:"size"`
+	CreatedAt          string `json:"created_at"`
+	Path               string `json:"path"`        // Download URL
+	ParentPath         string `json:"parent_path"` // Full folder path
+}
+
 type UserFolderListRequest struct {
 	Identity string `json:"identity,optional"`
 }
