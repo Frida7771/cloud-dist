@@ -97,8 +97,6 @@ Visit `http://localhost:3000` to use the application.
 
 ![CloudDist Interface](media/1.jpg)
 
-**Watch the demo video:** [https://youtu.be/7Cawo3XXVXc](https://youtu.be/7Cawo3XXVXc)
-
 
 
 
