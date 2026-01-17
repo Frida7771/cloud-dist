@@ -134,6 +134,7 @@ var (
 
 func getS3Client(ctx context.Context) (*s3.Client, error) {
 	s3ClientOnce.Do(func() {
+		log.Printf("[S3] Initializing S3 client...")
 		if define.S3Bucket == "" {
 			s3ClientErr = errors.New("S3Bucket is not configured")
 			return
@@ -153,12 +154,22 @@ func getS3Client(ctx context.Context) (*s3.Client, error) {
 			return
 		}
 
+		log.Printf("[S3] Creating client with UseAcceleration=%v", define.S3UseAcceleration)
 		s3Client = s3.NewFromConfig(cfg, func(o *s3.Options) {
 			if define.S3Endpoint != "" {
 				o.BaseEndpoint = aws.String(define.S3Endpoint)
 				o.UsePathStyle = true
 			}
+			// Enable S3 Transfer Acceleration for faster uploads
+			// Requires enabling Transfer Acceleration on the S3 bucket first
+			if define.S3UseAcceleration {
+				o.UseAccelerate = true
+				log.Printf("[S3] ✅ Transfer Acceleration ENABLED for bucket: %s", define.S3Bucket)
+			} else {
+				log.Printf("[S3] Transfer Acceleration disabled")
+			}
 		})
+		log.Printf("[S3] Client initialized successfully")
 	})
 
 	return s3Client, s3ClientErr

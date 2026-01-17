@@ -35,6 +35,7 @@ func NewServiceContext(c appcfg.Config) (*ServiceContext, error) {
 		c.S3.Bucket,
 		c.S3.Region,
 		c.S3.Endpoint,
+		c.S3.UseAcceleration,
 	)
 
 	// Initialize SendGrid configuration from config file (environment variables take precedence)

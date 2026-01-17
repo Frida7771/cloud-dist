@@ -41,11 +41,12 @@ var AWSAccessKeyID = os.Getenv("AWSAccessKeyID")
 var AWSSecretAccessKey = os.Getenv("AWSSecretAccessKey")
 var S3Bucket = os.Getenv("S3Bucket")
 var S3Region = os.Getenv("AWSRegion")
-var S3Endpoint = os.Getenv("S3Endpoint") // Optional custom endpoint
+var S3Endpoint = os.Getenv("S3Endpoint")                             // Optional custom endpoint
+var S3UseAcceleration = os.Getenv("S3UseAcceleration") == "true"     // Enable S3 Transfer Acceleration
 
 // InitS3Config initializes S3 configuration from config struct.
 // Environment variables take precedence over config file values.
-func InitS3Config(accessKeyID, secretAccessKey, bucket, region, endpoint string) {
+func InitS3Config(accessKeyID, secretAccessKey, bucket, region, endpoint string, useAcceleration bool) {
 	// Only set if not already set by environment variable
 	if AWSAccessKeyID == "" && accessKeyID != "" {
 		AWSAccessKeyID = accessKeyID
@@ -62,6 +63,11 @@ func InitS3Config(accessKeyID, secretAccessKey, bucket, region, endpoint string)
 	if S3Endpoint == "" && endpoint != "" {
 		S3Endpoint = endpoint
 	}
+	// Enable acceleration if not set by env and config says true
+	if os.Getenv("S3UseAcceleration") == "" && useAcceleration {
+		S3UseAcceleration = true
+	}
+	log.Printf("[InitS3Config] Bucket=%s, Region=%s, UseAcceleration=%v", S3Bucket, S3Region, S3UseAcceleration)
 }
 
 // InitSendGridConfig initializes SendGrid configuration from config struct.

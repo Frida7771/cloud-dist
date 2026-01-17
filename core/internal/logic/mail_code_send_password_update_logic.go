@@ -68,3 +68,4 @@ func (l *MailCodeSendPasswordUpdateLogic) MailCodeSendPasswordUpdate(req *types.
 }
 
 
+

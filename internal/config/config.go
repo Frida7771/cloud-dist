@@ -16,6 +16,12 @@ type Config struct {
 	Stripe   StripeConfig   `mapstructure:"Stripe"`
 }
 
+// StripeConfig carries Stripe payment configuration.
+type StripeConfig struct {
+	SecretKey     string `mapstructure:"SecretKey"`
+	WebhookSecret string `mapstructure:"WebhookSecret"`
+}
+
 // JWTConfig carries JWT configuration.
 type JWTConfig struct {
 	Key string `mapstructure:"Key"`
@@ -53,17 +59,12 @@ type S3Config struct {
 	SecretAccessKey string `mapstructure:"SecretAccessKey"`
 	Bucket          string `mapstructure:"Bucket"`
 	Region          string `mapstructure:"Region"`
-	Endpoint        string `mapstructure:"Endpoint"` // Optional custom endpoint
+	Endpoint        string `mapstructure:"Endpoint"`        // Optional custom endpoint
+	UseAcceleration bool   `mapstructure:"UseAcceleration"` // Enable S3 Transfer Acceleration
 }
 
 // SendGridConfig carries SendGrid email configuration.
 type SendGridConfig struct {
 	APIKey    string `mapstructure:"APIKey"`
 	FromEmail string `mapstructure:"FromEmail"` // Optional sender email
-}
-
-// StripeConfig carries Stripe payment configuration.
-type StripeConfig struct {
-	SecretKey     string `mapstructure:"SecretKey"`
-	WebhookSecret string `mapstructure:"WebhookSecret"`
 }
